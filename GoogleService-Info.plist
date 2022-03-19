@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>122884505621-0g0j5jsq6n3ivdjqp2njfp0ou15pc6p3.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.122884505621-0g0j5jsq6n3ivdjqp2njfp0ou15pc6p3</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBTPNLCRFgV52J3c3_U5lLmQBa5_8y08t8</string>
+	<key>GCM_SENDER_ID</key>
+	<string>122884505621</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.szserrano.HomeMonitorApp</string>
+	<key>PROJECT_ID</key>
+	<string>home-monitor-app-fea56</string>
+	<key>STORAGE_BUCKET</key>
+	<string>home-monitor-app-fea56.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:122884505621:ios:643922bca4af79b1a54e1c</string>
+</dict>
+</plist>
