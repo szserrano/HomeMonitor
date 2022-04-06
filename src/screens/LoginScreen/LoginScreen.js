@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
 import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { db, auth } from '../../firebase/config.js'
+import { signOut, signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import styles from './styles';
 
 export default function LoginScreen({navigation}) {
@@ -12,6 +15,26 @@ export default function LoginScreen({navigation}) {
     }
 
     const onLoginPress = () => {
+        signInWithEmailAndPassword(auth, email, password)
+            .then((userCredentials) => {
+                console.log('user is logged in:', userCredentials.user.email)
+                console.log('user uid:', userCredentials.user.uid)
+                console.log('user object:',userCredentials.user)
+                const docRef = doc(db, "users", userCredentials.user.uid);
+                const docSnap = getDoc(docRef)
+
+                console.log("does docRef exist?:", docSnap.exists)
+                if(docSnap.exists){
+                    const dataRef = docSnap.data() 
+                    console.log("Document data:", dataRef)
+                    navigation.replace('Home', {user: dataRef})
+                } else { // docSnap.data() is undefined here
+                    console.log("No such document!")
+                }
+            })
+            .catch((err) => {
+                console.log(err.message)
+            })
     }
 
     return (
@@ -21,7 +44,7 @@ export default function LoginScreen({navigation}) {
                 keyboardShouldPersistTaps="always">
                 <Image
                     style={styles.logo}
-                    source={require('../../assets/icon.png')}
+                    source={require('../../assets/house.png')}
                 />
                 <TextInput
                     style={styles.input}
