@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { firebase } from '../../firebase/config.js'
+import { db, auth } from '../../firebase/config.js'
+import { collection, doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth'
 import styles from './styles';
 
 export default function RegistrationScreen({navigation}) {
@@ -19,30 +21,36 @@ export default function RegistrationScreen({navigation}) {
             alert("Passwords don't match.")
             return
         }
-        firebase
-            .auth()
-            .createUserWithEmailAndPassword(email, password)
-            .then((response) => {
-                const uid = response.user.uid
+        createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredentials) => {
+                const user = userCredentials.user;
+                const new_uid = userCredentials.user.uid
                 const data = {
-                    id: uid,
+                    id: new_uid,
                     email,
                     fullName,
                 };
-                const usersRef = firebase.firestore().collection('users')
-                usersRef
-                    .doc(uid)
-                    .set(data)
+                console.log(new_uid)
+                const usersColRef = collection(db, 'users')
+                setDoc(doc(usersColRef, new_uid), {
+                        id: new_uid,
+                        email,
+                        fullName,
+                    })
                     .then(() => {
-                        navigation.navigate('Home', {user: data})
+                        alert("New User Created", user.email);
+                        console.log('new user email:', user.email);
+                        navigation.replace('Home', {user: data})
                     })
                     .catch((error) => {
+                        console.log('error in RegistrationScreen.js creating a new user w email/pass')
                         alert(error)
+                        console.log(error)
                     });
             })
-            .catch((error) => {
-                alert(error)
-        });
+            .catch((err) => {
+                console.log(err.message)
+            })
     }
 
     return (
@@ -52,7 +60,7 @@ export default function RegistrationScreen({navigation}) {
                 keyboardShouldPersistTaps="always">
                 <Image
                     style={styles.logo}
-                    source={require('../../assets/icon.png')}
+                    source={require('../../assets/house.png')}
                 />
                 <TextInput
                     style={styles.input}
