@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useState, useLayoutEffect } from 'react'
 import styles from './styles';
-import { collection, query, where, orderBy, getDocs, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, getDoc, doc, addDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config'
 import { GiftedChat } from 'react-native-gifted-chat'
 
@@ -9,49 +9,23 @@ export default function ChatScreen(props){
   const userID = props.extraData.id
   const userName = props.extraData.fullName
   const email = props.extraData.email
-  /*useEffect(() => {
-      collection(db, 'chat')
-      orderBy('createdAt', 'desc')
-    setMessages([
-      {
-        _id: 1,
-        text: 'Hello!',
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: 'React Native',
-          avatar: 'https://placeimg.com/140/140/any',
-        },
-      },
-    ])
-  }, [])*/
-
+  const houseID = props.extraData.houseID
+  const chatID = "DOEidq74bBRSwZ5vYpJC58pux5r1tpuV5l3Pd8XXhRywl7JAm0iSpil1"
+ 
   useLayoutEffect(() => {
-    const docRef = getDocs(db, 'chat')
-    const q = query(collection(db, 'chat'), orderBy('createdAt', 'desc'))
-    /*const unsub = onSnapshot(q, snapshot=>setMessages(
-        //console.log("snapshot:", snapshot),
-        //console.log("snapshot.docs:",snapshot.docs),
-        snapshot.docs.map(doc=>({
+    const q = query(collection(db, 'chats', 'House A', chatID), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => setMessages(
+        snapshot.docs.map(doc => ({
             _id: doc.data()._id,
             createdAt: doc.data().createdAt.toDate(),
-            text: doc.data().txt,
-            user: doc.data().user
+            text: doc.data().text,
+            user: doc.data().user,
         }))
-    ))*/
-    //const q = getDocs(collection(db, 'chat'))
-    /*const unsub = onSnapshot(q, (querySnapshot) => {
-        const chats = [];
-        querySnapshot.forEach((doc) => {
-            const d = doc.data()
-            chats.push({d})
-        })
-        console.log("Current data: ", doc.data());
-    });*/
-    const unsub = onSnapshot(docRef, (doc) => {
-        console.log("Current data: ", doc.data());
-    });  
-    return unsub
+    ));
+
+    return () => {
+      unsubscribe();
+    };
   }, [])
 
   const onSend = useCallback((messages = []) => {
@@ -62,12 +36,23 @@ export default function ChatScreen(props){
         text,
         user
     }=messages[0]
-    //const chatColRef = collection(db, 'chat')
-    setDoc(doc(db, 'chat', userID), {
-        _id,
-        createdAt,
-        text,
-        user
+
+    // can only call addDoc on collections
+    let houseName = ''
+    const q = query(collection(db, 'houses'), where("houseID", "==", houseID))
+    getDocs(q)
+    .then(querySnapshot => {
+      querySnapshot.forEach((doc) => {
+        houseName = doc.data().name
+        //console.log(houseName)
+      })
+      const colRef = collection(db, 'chats', `${houseName}`, `${chatID}`)
+      addDoc(colRef, {
+          _id,
+          createdAt,
+          text,
+          user
+      })
     })
   }, [])
 

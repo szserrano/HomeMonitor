@@ -36,6 +36,7 @@ export default function RegistrationScreen({navigation}) {
                         id: new_uid,
                         email,
                         fullName,
+                        password,
                     })
                     .then(() => {
                         alert("New User Created", user.email);
