@@ -62,7 +62,8 @@ export default function ChatScreen(props){
       showAvatarForEveryMessage={true}
       onSend={messages => onSend(messages)}
       user={{
-        id: userID,
+        _id: userID, // GiftedChat _id value to display messages differently depending on logged in user
+        id: userID, // userID used for collection (database) relations in firebase
         name: userName
       }}
     />
