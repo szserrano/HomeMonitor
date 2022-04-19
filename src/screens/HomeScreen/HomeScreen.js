@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { FlatList, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import styles from './styles';
+//import Tabletop from "tabletop";
+import Papa from 'papaparse';
 import { signOut } from 'firebase/auth'
 import { collection, query, where, doc, getDoc, getDocs, addDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config'
@@ -13,6 +15,7 @@ export default function HomeScreen(props) {
     const [entityTextAdd, setEntityTextAdd] = useState('')
     const [entityTextLeave, setEntityTextLeave] = useState('')
     const [entities, setEntities] = useState([])
+    const [sheetData, setSheetData] = useState([])
 
     // Populate entityRef (houses collection reference for house entities with matching houseIDs)
     const userID = props.extraData.id
@@ -25,8 +28,32 @@ export default function HomeScreen(props) {
 
     const navigation = useNavigation()
 
+    const getSheetData = () => {
+        // Grabbing data from the google sheet 
+        var url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDvPSiYgoRATrRF3nr0GXL1I37gZb9nd7GlUhUXU_Dteh08f7t6rF7BOJsKzVjrYz7mIxWYvw8pNhq/pub?output=csv'
+        var xhr = new XMLHttpRequest()
+        xhr.onreadystatechange = function(){
+            if(xhr.readyState == 4 && xhr.status == 200){
+                var data = Papa.parse(xhr.responseText)
+                var contents = data.data
+                // Can iterate through contents of the array if multiple cells are populated, but webhooks only overwrites first cell
+                //   so we use contents[i][0] (i iterates through the only thing in contents array, 0 index gives us what's in the cell)
+                for(var i in contents){
+                    console.log("The first cell of the sheet: ",contents[i][0])
+                }
+            }
+        }
+        xhr.open("GET", url, true)
+        xhr.send()
+    }
+
     useEffect(() => {
         console.log("in useEffect HomeScreen")
+        console.log("About to find google sheet")
+
+        // setInterval calls getSheetData every 300000 milliseconds (every 5 minutes)
+        update = setInterval(getSheetData, 60000)
+
         getDoc(userRef)
         .then((docSnap) => {
             console.log(docSnap.data().fullName)
@@ -35,21 +62,7 @@ export default function HomeScreen(props) {
         onSnapshot(colRef, (snapshot) => {
             let newEntities = []
             snapshot.forEach(async (document) => { // For each houseID that a user has
-                /*
-                // Get the doc from houses that match the current houseID we have using a query and getDocs
-                const q = query(collection(db, 'houses'), where('houseID', '==', `${doc.data().houseID}`))
-                getDocs(q)
-                .then((querySnapshot) => {
-                    querySnapshot.forEach((doc) => { // Should be just one document from houses
-                        console.log("doc.data() which should be data from a house: ", doc.data())
-                        let entity = doc.data()
-                        entity.id = doc.id
-                        console.log("newEntities before push: ", newEntities)
-                        newEntities.push(entity)
-                        console.log("newEntities after push: ", newEntities)
-                    })
-                    setEntities(newEntities)
-                })*/
+                
                 // Get the doc from houses that match the current houseID we have using a query and getDocs
                 const docRef = doc(db, 'houses', `${document.data().houseID}`)
                 const docSnap = await getDoc(docRef)
