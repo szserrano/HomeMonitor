@@ -48,7 +48,7 @@ export default function HomeScreen(props) {
         // setInterval calls getSheetData every 300000 milliseconds (every 5 minutes)
         var data = fetchData();
         //var json = JSON.parse(data);
-        console.log("data: ", data)
+        console.log("data: ", data) //debug code to see JSON data
         //update = setInterval(fetchData, 30000)
 
         getDoc(userRef)
