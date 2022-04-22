@@ -1,7 +1,3 @@
-import { StatusBar } from 'expo-status-bar';
-import { Alert, Modal, Pressable, StyleSheet, Text, View, SafeAreaView, Button, Dimensions } from 'react-native';
-import ContactsScreen from './src/screens/ContactsScreen';
-
 import 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react'
 import { registerRootComponent } from 'expo';
