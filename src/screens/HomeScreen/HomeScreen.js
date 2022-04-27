@@ -3,10 +3,11 @@ import { FlatList, Keyboard, Text, TextInput, TouchableOpacity, View } from 'rea
 import styles from './styles';
 import axios from "axios";
 import { signOut } from 'firebase/auth';
-import { collection, query, where, doc, getDoc, getDocs, addDoc, updateDoc, onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, query, where, doc, getDoc, getDocs, addDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config';
 import { useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import VegaScrollList from 'react-native-vega-scroll-list';
 
 const Stack = createStackNavigator();
 
@@ -16,7 +17,7 @@ export default function HomeScreen(props) {
 
     // Used in Adding/Leaving a house in onAddButtonPress function
     const [entityTextAdd, setEntityTextAdd] = useState('');
-    const [entityTextLeave, setEntityTextLeave] = useState('');
+    const [entityTextCreate, setEntityTextCreate] = useState('');
 
     // Used in useEffect call in order to display houses that a user is a member of
     const [entities, setEntities] = useState([]);
@@ -33,6 +34,7 @@ export default function HomeScreen(props) {
     const userRef = doc(db, 'users', `${userID}`); // User reference for firebase access
     const colRef = collection(db, 'users', `${userID}`, 'houseIDs'); // Collection reference for a specific user's houseIDs collection for firebase access
     const entranceColRef = collection(db, 'entrances'); // Collection reference for entrances collection for firebase access
+    const houseColRef = collection(db, 'houses'); // Collection reference for houses collection for firebase access
 
     // Use the navigation from App.js
     const navigation = useNavigation();
@@ -80,6 +82,7 @@ export default function HomeScreen(props) {
             setLoading(false);
         }
 
+        // Getting and returning house objects to populate newEntities in parent calling function
         function getHousesForEachPost(houseIDDocSnaps) {
             return Promise.all(
                 houseIDDocSnaps.map(async (houseIDDocSnap) => {
@@ -176,14 +179,13 @@ export default function HomeScreen(props) {
         }
     }, []);
 
-    console.log("entities:", entities);
-    
-    const onAddButtonPress = () => {
-        // Adding a new house
+    const onAddButtonPress = async () => {
+        // Adding an existing house
         if(entityTextAdd && entityTextAdd.length > 0) {
             const houseRef = query(collection(db, 'houses'), where('houseID', '==', `${entityTextAdd}`));
-            console.log(houseRef);
-            if(houseRef) { // If the house reference exists, set the user doc to have the houseID
+            const houseSnapshot = await getDocs(houseRef);
+            
+            if(!houseSnapshot.empty) { // If the house reference exists, set the user doc to have the houseID
                 const data = {
                     houseID: entityTextAdd
                 };
@@ -199,32 +201,50 @@ export default function HomeScreen(props) {
                     });
             }
             else {
-                alert("No existing house");
+                setEntityTextAdd('');
+                alert("No existing house. \nPlease enter the HouseID of an existing house or use the Create button to create a new one.");
             }
         }
     }
 
-    const onLeaveButtonPress = () => {
-        /*if (entityTextLeave && entityTextLeave.length > 0) {
-            const data = {
-                title: entityText,
-                ownerID: userID,
-                openBool: false
-            };
-            addDoc(entityRef, data)
-                .then(_doc => {
-                    setEntityText('')
-                    Keyboard.dismiss()
+    const onCreateButtonPress = async () => {
+        // Creating a new house
+        if(entityTextCreate && entityTextCreate.length > 0) {
+            const q = query(houseColRef, where('name', '==', `${entityTextCreate}`));
+            const houseQuerySnapshot = await getDocs(q);
+            
+            if(houseQuerySnapshot.empty) { // If query snapshot is empty, we create a new houseID and house
+                const houseDocRef = await addDoc(houseColRef, { name: entityTextCreate }); // Create a new doc in users houseIDs subcol
+                const houseData = { // data for new house doc
+                    houseID: houseDocRef.id,
+                    name: entityTextCreate
+                };
+                await setDoc(houseDocRef, houseData) // set data of the new house 
+                    .then(_doc => {
+                        setEntityTextCreate('');
+                        Keyboard.dismiss();
+                        console.log("Created new house", houseData.name);
+                    })
+                    .catch((error) => alert(error));
+
+                const houseIDsDocRef = doc(db, 'users', `${userID}`, 'houseIDs', `${houseDocRef.id}`); // users houseIDs subcol reference
+                await setDoc(houseIDsDocRef, { // set data of new houseIDs document
+                    houseID: houseDocRef.id,
                 })
-                .catch((error) => {
-                    alert(error)
-                });
-        }*/
-        console.log("Implement");
+                    .then(() => {
+                        alert("New house created and joined:", houseDocRef.id);
+                    })
+                    .catch((error) => alert(error));
+            }
+            else {
+                setEntityTextCreate('');
+                alert("No existing house. \nPlease enter the HouseID of an existing house or use the Create button to create a new one.");
+            }
+        }
     }
 
     const onChatButtonPress = () => {
-        return( // Creating a new stack navigator
+        return( // navigate to chat page
             navigation.navigate('Chat')
         );
     }
@@ -262,7 +282,7 @@ export default function HomeScreen(props) {
             <View style={styles.formContainer}>
                 <TextInput
                     style={styles.input}
-                    placeholder='Join/create a new house'
+                    placeholder='House ID of an existing house'
                     placeholderTextColor="#aaaaaa"
                     onChangeText={(text) => setEntityTextAdd(text)}
                     value={entityTextAdd}
@@ -277,21 +297,22 @@ export default function HomeScreen(props) {
             <View style={styles.formContainer}>
                 <TextInput
                     style={styles.input}
-                    placeholder='Leave a house'
+                    placeholder='Name your new house?'
                     placeholderTextColor="#aaaaaa"
-                    onChangeText={(text) => setEntityTextLeave(text)}
-                    value={entityTextLeave}
+                    onChangeText={(text) => setEntityTextCreate(text)}
+                    value={entityTextCreate}
                     underlineColorAndroid="transparent"
                     autoCapitalize="none"
                 />
-                <TouchableOpacity style={styles.button} onPress={onLeaveButtonPress}>
-                    <Text style={styles.buttonText}>Leave</Text>
+                <TouchableOpacity style={styles.button} onPress={onCreateButtonPress}>
+                    <Text style={styles.buttonText}>Create</Text>
                 </TouchableOpacity>
             </View>
             {loading && <Text>Loading</Text>}
             { !loading && (entities && (
                 <View style={styles.listContainer}>
-                    <FlatList
+                    <VegaScrollList
+                        distanceBetweenItem={12}
                         data={entities}
                         renderItem={renderEntity}
                         keyExtractor={(item) => item.id}
