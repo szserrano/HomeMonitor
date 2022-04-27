@@ -37,7 +37,8 @@ export default function ChatScreen(props){
         user
     }=messages[0]
 
-    // can only call addDoc on collections
+    // Can only call addDoc on collections. 
+    // See https://stackoverflow.com/questions/47474522/firestore-difference-between-set-and-add 
     let houseName = ''
     const q = query(collection(db, 'houses'), where("houseID", "==", houseID))
     getDocs(q)
