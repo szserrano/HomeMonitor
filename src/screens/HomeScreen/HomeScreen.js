@@ -2,12 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { FlatList, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import styles from './styles';
 import axios from "axios";
-import { signOut } from 'firebase/auth';
 import { collection, query, where, doc, getDoc, getDocs, addDoc, onSnapshot, setDoc } from 'firebase/firestore';
-import { db, auth } from '../../firebase/config';
+import { db } from '../../firebase/config';
 import { useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import VegaScrollList from 'react-native-vega-scroll-list';
 
 const Stack = createStackNavigator();
 
@@ -28,7 +26,6 @@ export default function HomeScreen(props) {
 
     // Populate entityRef (houses collection reference for house entities with matching houseIDs)
     const userID = props.extraData.id;
-    const userEmail = props.extraData.email;
     const userName = props.extraData.fullName;
 
     const userRef = doc(db, 'users', `${userID}`); // User reference for firebase access
@@ -249,32 +246,24 @@ export default function HomeScreen(props) {
         );
     }
 
-    const onLogoutButtonPress = () => {
-        signOut(auth)
-            .then(() => {
-                alert("You have been logged out");
-            })
-            .catch((err) => {
-                console.log(err);
-            });
+    const onViewButtonPress = () => {
+        navigation.navigate('Houses')
     }
 
     const renderEntity = ({item, index}) => {
         return (
-            <View style={styles.entityContainer}>
-                <Text style={styles.entityTextAdd}>
-                    {index+1}. {"\t"} {item.name} {"\n"} HouseID: {item.houseID}
-                </Text>
-            </View>
+            <TouchableOpacity style={styles.entityContainer} onPress={onViewButtonPress}>
+                <View>
+                    <Text style={styles.entityText}>
+                        {index+1}. {"\t"} {item.name} {"\n"} HouseID: {item.houseID}
+                    </Text>
+                </View>
+            </TouchableOpacity>
         );
     }
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.button} onPress={onLogoutButtonPress}>
-                <Text style={styles.buttonText}>Logout</Text>
-            </TouchableOpacity>
-            
             <TouchableOpacity style={styles.button} onPress={onChatButtonPress}>
                 <Text style={styles.buttonText}>Chat</Text>
             </TouchableOpacity>
@@ -311,13 +300,19 @@ export default function HomeScreen(props) {
             {loading && <Text>Loading</Text>}
             { !loading && (entities && (
                 <View style={styles.listContainer}>
-                    <VegaScrollList
-                        distanceBetweenItem={12}
+                    <FlatList
                         data={entities}
                         renderItem={renderEntity}
                         keyExtractor={(item) => item.id}
                         removeClippedSubviews={true}
-                        ListHeaderComponent={()=><Text>{userName}'s Houses</Text>}
+                        ListHeaderComponent={()=> {
+                            return (
+                                <View style={styles.header}> 
+                                    <Text style={styles.headerText}>{userName}'s Houses 
+                                        {"\n(Tap on a House to view its details!)"}</Text> 
+                                </View>
+                            )
+                        }}
                     />
                 </View>)
             )}

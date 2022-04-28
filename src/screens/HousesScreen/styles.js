@@ -8,7 +8,11 @@ export default StyleSheet.create({
     formContainer: {
         flexDirection: 'row',
         height: 80,
-        flex: 0.15,
+        marginTop: 40,
+        marginBottom: 20,
+        flex: 1,
+        paddingTop: 10,
+        paddingBottom: 10,
         paddingLeft: 30,
         paddingRight: 30,
         justifyContent: 'center',
@@ -38,37 +42,15 @@ export default StyleSheet.create({
     listContainer: {
         marginTop: 20,
         padding: 20,
-        flex: 1,
     },
     entityContainer: {
         marginTop: 16,
-        backgroundColor: '#D4F1F4',
-        borderRadius: 5,
         borderBottomColor: '#cccccc',
         borderBottomWidth: 1,
-        paddingTop: 5,
-        paddingLeft: 5,
-        paddingBottom: 5,
-        alignItems: 'center',
+        paddingBottom: 16
     },
     entityText: {
         fontSize: 20,
         color: '#333333'
-    },
-    entityButton: {
-        color: '#D4F1F4'
-    },
-    header: {
-        //backgroundColor: '#000C66',
-        borderRadius: 5,
-        flex: 1,
-        height: 50,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 20
-    },
-    headerText: {
-        color: '#000C66',
-        fontSize: 18,
-    },
+    }
 })
