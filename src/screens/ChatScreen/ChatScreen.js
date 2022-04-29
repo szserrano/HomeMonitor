@@ -3,16 +3,23 @@ import styles from './styles';
 import { collection, query, where, orderBy, getDocs, getDoc, doc, addDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config'
 import { GiftedChat } from 'react-native-gifted-chat'
+import { useNavigation } from '@react-navigation/native';
 
-export default function ChatScreen(props){
+export default function ChatScreen({route}){
   const [messages, setMessages] = useState([]);
-  const userID = props.extraData.id
-  const userName = props.extraData.fullName
-  const email = props.extraData.email
-  const houseID = props.extraData.houseID
+  const userID = route.params.extraData.id
+  const userName = route.params.extraData.fullName
+  const email = route.params.extraData.email
+  const houseID = route.params.extraData.houseID
   const chatID = "DOEidq74bBRSwZ5vYpJC58pux5r1tpuV5l3Pd8XXhRywl7JAm0iSpil1"
- 
+  const navigation = useNavigation();
+  
   useLayoutEffect(() => {
+    navigation.setOptions({
+      title: route.params.name +' Chat',
+      headerStyle: route.params.headerStyle,
+      headerTintColor: route.params.headerTintColor
+    })
     const q = query(collection(db, 'chats', 'House A', chatID), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => setMessages(
         snapshot.docs.map(doc => ({

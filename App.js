@@ -85,7 +85,7 @@ export default function App() {
             </Stack.Screen>
 
             <Stack.Screen name="Chat" options={{
-                title: "Chat", // Find how to display current house in the title
+                title: "Chat", 
                 headerRight: () => (
                   <TouchableOpacity style={{marginRight: 20}} 
                   onPress={() => {
@@ -111,7 +111,7 @@ export default function App() {
             </Stack.Screen>
 
             <Stack.Screen name="Houses" options={{
-                title: "Houses", // Find how to display current house in the title
+                title: "Houses", 
                 headerRight: () => (
                   <TouchableOpacity style={{marginRight: 20}} 
                   onPress={() => {
