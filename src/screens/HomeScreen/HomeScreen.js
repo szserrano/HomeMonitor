@@ -226,6 +226,9 @@ export default function HomeScreen(props) {
 
     return (
         <View style={styles.container}>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Notifications')}>
+                    <Text style={styles.buttonText}>Notifications</Text>
+            </TouchableOpacity>
             <View style={styles.formContainer}>
                 <TextInput
                     style={styles.input}

@@ -1,16 +1,17 @@
 import 'react-native-gesture-handler';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Alert } from "react-native";
 import { registerRootComponent } from 'expo';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { LoginScreen, HomeScreen, RegistrationScreen, ChatScreen, HousesScreen } from './src/screens';
+import { LoginScreen, HomeScreen, RegistrationScreen, ChatScreen, HousesScreen, NotificationScreen } from './src/screens';
 import {decode, encode} from 'base-64';
 import { db, auth } from './src/firebase/config.js';
 import { collection, doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { AntDesign } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+
 if (!global.btoa) {  global.btoa = encode }
 if (!global.atob) { global.atob = decode }
 
@@ -134,6 +135,32 @@ export default function App() {
                   </TouchableOpacity>
             )}}>
               {props => <HousesScreen {...props} extraData={user} />}
+            </Stack.Screen>
+
+            <Stack.Screen name="Notifications" options={{
+                title: "Houses", 
+                headerRight: () => (
+                  <TouchableOpacity style={{marginRight: 20}} 
+                  onPress={() => {
+                    Alert.alert(
+                      "Log Out?",
+                      "Are you sure you want to log out?",
+                      [
+                        { text: "Cancel" },
+                        { 
+                          text: "Yes",
+                          onPress: () => {
+                            alert("You have been logged out.");
+                            signOut(auth);
+                          }  
+                        }
+                      ]
+                    );
+                    }}>
+                    <AntDesign name="logout" size={24} color="black"/>
+                  </TouchableOpacity>
+            )}}>
+              {props => <NotificationScreen {...props} extraData={user} />}
             </Stack.Screen>
           </>
         ) : (

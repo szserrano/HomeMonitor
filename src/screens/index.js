@@ -7,3 +7,5 @@ export { default as RegistrationScreen } from './RegistrationScreen/Registration
 export { default as ChatScreen } from './ChatScreen/ChatScreen'
 
 export { default as HousesScreen } from './HousesScreen/HousesScreen'
+
+export { default as NotificationScreen } from './NotificationScreen/NotificationScreen'
