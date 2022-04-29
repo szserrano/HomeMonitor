@@ -28,6 +28,7 @@ export default function HousesScreen({route}) {
     const [entranceData, setEntranceData] = useState({});
     const [entranceChangeID, setEntranceChangeID] = useState('1');
 
+    console.log("ROUTE PARAMS:", route.params);
     const colRef = collection(db, 'houses', `${route.params.houseID}`, 'entranceIDs'); // Collection reference for entrances collection for firebase access
 
     useEffect(() => {
@@ -53,7 +54,7 @@ export default function HousesScreen({route}) {
                     setEntranceData(data);
                     setEntranceChangeID(response.data.uuid);
                     console.log("entranceChangeID != response.data.uuid. Now we set it:", entranceChangeID);
-                    console.log("New update jus dropped: ", entranceData);
+                    console.log("New update jus dropped: ", entranceData[0]);
                 }
                 else {
                     var data = {
@@ -65,7 +66,7 @@ export default function HousesScreen({route}) {
                     };
                     setEntranceData(data);
                     setEntranceChangeID(response.data.uuid);
-                    console.log("No new entrance data to handle, changed flag set to false: ", entranceData);
+                    console.log("No new entrance data to handle, changed flag set to false: ", entranceData[0]);
                 }
             } catch (error) {
                 console.error(error.message);
@@ -77,9 +78,7 @@ export default function HousesScreen({route}) {
         function getEntrancesForEachPost(entranceIDDocSnaps) {
             return Promise.all(
                 entranceIDDocSnaps.map(async (entranceIDDocSnap) => {
-                    const entranceData = entranceIDDocSnap.data();
-
-                    const entranceDocRef = doc(db, 'entrances', entranceData.houseID);
+                    const entranceDocRef = doc(db, 'entrances', entranceIDDocSnap.id);
                     const entranceDocSnap = await getDoc(entranceDocRef);
             
                     return {
@@ -90,13 +89,15 @@ export default function HousesScreen({route}) {
             )
         }
 
+        // Random function to create entranceIDs subcollection within houses documents
         const hold = async () => {
             const docRef = doc(db, 'houses', `${route.params.houseID}`, 'entranceIDs', 'WunBESVGPHmk0DDeES3t');
-            await updateDoc(docRef, {
+            updateDoc(docRef, {
                 houseID: route.params.houseID
             })
         }
         //hold();
+        
         /*fetchData();
 
         // If our entranceData is different, we add/modify the entrance document
@@ -137,12 +138,10 @@ export default function HousesScreen({route}) {
                 let cancelled = false; 
                 cancelPreviousPromiseChain = () => cancelled = true;
 
-                console.log("ONSNAPSHOT.LENGTH:",snapshot.length)
                 getEntrancesForEachPost(snapshot.docs)
                 .then((entitiesArray) => {
                     if(cancelled) return; // cancelled, do nothing
                     setLoading(false);
-                    console.log("ENTITIES ARRAY SIZE", entitiesArray.size)
                     setEntrances(entitiesArray);
                 })
                 .catch((error) => {
@@ -163,14 +162,16 @@ export default function HousesScreen({route}) {
         }
     }, []);
 
-    console.log("ENTRANCES.SIZE:", entrances.length);
-
+    console.log(entrances[0])
     // Render entrances
     const renderEntrances = ({item, index}) => {
         return (
-                <View>
+                <View style={styles.entityContainer}>
                     <Text style={styles.entityText}>
-                        {index+1}. {"\t"} {item.name} {"\n"} Entrance ID: {item.FIGURE_OUT_WHAT_PARAM_TO_PASS} 
+                        Entrance: {"\t"} {item.name} {"\n\n"}Entrance ID: {item.id} {"\n\n"}
+                        Status: {item.status} {"\n"} 
+                        {item.status == "open" && (<Text style={styles.entityText}>Last {item.status}ed on:{"\n"}{item.created_at}</Text>)}
+                        {item.status == "closed" && (<Text style={styles.entityText}>Last {item.status} on:{"\n"}{item.created_at}</Text>)}
                     </Text>
                     <Modal
                         animationType="slide"
@@ -188,16 +189,19 @@ export default function HousesScreen({route}) {
                                 style={[styles.button, styles.buttonClose]}
                                 onPress={() => setModalVisible(!modalVisible)}
                                 >
-                                    <Text style={styles.textStyle}>Hide Modal</Text>
+                                    <Text style={styles.buttonText}>Hide Modal</Text>
                                 </Pressable>
                             </View>
                         </View>
                     </Modal>
                     <Pressable
                         style={[styles.button, styles.buttonOpen]}
-                        onPress={() => setModalVisible(true)}
+                        onPress={() => {
+                            setModalVisible(true);
+                            onEditButtonPress();
+                        }}
                     >
-                        <Text style={styles.textStyle}>Show Modal</Text>
+                        <Text style={styles.buttonText}>Edit</Text>
                     </Pressable>
                 </View>
         );
@@ -218,15 +222,18 @@ export default function HousesScreen({route}) {
     }
 
     const onEditButtonPress = () => {
-
+        //IMPLEMENT
+        console.log("Edit button pressed!")
     }
+
     return(
         <View style={styles.container}>
             <TouchableOpacity style={styles.button} onPress={onChatButtonPress}>
                 <Text style={styles.buttonText}>Chat</Text>
             </TouchableOpacity>
-            <Text style={styles.entityText}>Houses Screen for {route.params.name}</Text>
+            <Text style={styles.entityText}>Chat with users in {route.params.name}</Text>
             {loading && <Text>Loading</Text>}
+            { !entrances.length && <Text>No entrances logged for this house!</Text> }
             { !loading && (entrances && (
                 <View style={styles.listContainer}>
                     <FlatList

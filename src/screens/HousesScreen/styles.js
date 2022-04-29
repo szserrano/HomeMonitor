@@ -45,13 +45,33 @@ export default StyleSheet.create({
     },
     entityContainer: {
         marginTop: 16,
+        backgroundColor: '#D1E2C4',
+        borderRadius: 25,
         borderBottomColor: '#cccccc',
         borderBottomWidth: 1,
-        paddingBottom: 16
+        paddingTop: 5,
+        paddingLeft: 5,
+        paddingBottom: 5,
+        alignItems: 'center',
     },
     entityText: {
         fontSize: 20,
+        fontWeight: "bold",
         color: '#333333'
+    },
+    header: {
+        //backgroundColor: '#000C66',
+        borderRadius: 5,
+        flex: 1,
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20
+    },
+    headerText: {
+        color: '#000C66',
+        fontSize: 18,
+        fontWeight: 'bold'
     },
     centeredView: {
         flex: 1,

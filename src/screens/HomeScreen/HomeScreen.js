@@ -217,7 +217,7 @@ export default function HomeScreen(props) {
             }}>
                 <View>
                     <Text style={styles.entityText}>
-                        {index+1}. {"\t"} {item.name} {"\n"} HouseID: {item.houseID}
+                        {index+1}. {"\t"} {item.name} {"\n"}HouseID: {item.houseID}
                     </Text>
                 </View>
             </TouchableOpacity>

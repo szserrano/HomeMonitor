@@ -43,7 +43,7 @@ export default StyleSheet.create({
     entityContainer: {
         marginTop: 16,
         backgroundColor: '#D4F1F4',
-        borderRadius: 5,
+        borderRadius: 15,
         borderBottomColor: '#cccccc',
         borderBottomWidth: 1,
         paddingTop: 5,
@@ -52,7 +52,8 @@ export default StyleSheet.create({
         alignItems: 'center',
     },
     entityText: {
-        fontSize: 20,
+        fontSize: 18,
+        fontWeight: 'bold',
         color: '#333333'
     },
     entityButton: {
@@ -70,5 +71,6 @@ export default StyleSheet.create({
     headerText: {
         color: '#000C66',
         fontSize: 18,
+        fontWeight: 'bold'
     },
 })
