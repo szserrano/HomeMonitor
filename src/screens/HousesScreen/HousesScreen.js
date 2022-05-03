@@ -3,7 +3,7 @@ import { Pressable, Modal, FlatList, Keyboard, Text, TextInput, TouchableOpacity
 import styles from './styles';
 import axios from "axios";
 import { signOut } from 'firebase/auth';
-import { collection, query, where, doc, getDoc, getDocs, addDoc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, collectionGroup, query, where, doc, getDoc, getDocs, addDoc, onSnapshot, setDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config';
 import { useNavigation } from '@react-navigation/native';
 
@@ -21,15 +21,16 @@ export default function HousesScreen({route}) {
     const [entityTextAdd, setEntityTextAdd] = useState('');
     const [entityTextCreate, setEntityTextCreate] = useState('');
 
-    // Used to display entrances within the current house
+    // Used to display entrances and users within the current house
     const [entrances, setEntrances] = useState([]);
+    const [users, setUsers] = useState([]);
 
     // Used in fetchData function 
     const [entranceData, setEntranceData] = useState({});
     const [entranceChangeID, setEntranceChangeID] = useState('1');
 
     console.log("ROUTE PARAMS:", route.params);
-    const colRef = collection(db, 'houses', `${route.params.houseID}`, 'entranceIDs'); // Collection reference for entrances collection for firebase access
+    const entranceIDsColRef = collection(db, 'houses', `${route.params.houseID}`, 'entranceIDs'); // Collection reference for entrances collection for firebase access
 
     useEffect(() => {
         // Function to fetch data from webhook.site of new entrance update
@@ -131,7 +132,7 @@ export default function HousesScreen({route}) {
 
         let cancelPreviousPromiseChain = undefined;
         // Snapshot of houseIDs collection in users object 
-        const unsubscribe = onSnapshot(colRef, 
+        const unsubscribe = onSnapshot(entranceIDsColRef, 
             (snapshot) => {
                 if(cancelPreviousPromiseChain) cancelPreviousPromiseChain(); // Cancel previous run if possible
 
@@ -162,8 +163,80 @@ export default function HousesScreen({route}) {
         }
     }, []);
 
-    console.log(entrances[0])
+    useEffect(() => {
+        // Random ID generator for the flatlist of users for each post
+        function makeID(length) {
+            var result = '';
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+            var charactersLength = characters.length;
+            for(var i = 0; i < length; i++){
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            console.log(result);
+            return result;
+        }
+
+        // Getting and returning house objects to populate newEntities in parent calling function
+        function getUsersForEachPost(userDocSnaps) {
+            return Promise.all(
+                userDocSnaps.docs.map(async (i) => {
+                    return {
+                        id: makeID(9),
+                        fullName: i.data().fullName
+                    };
+                })
+            )
+        }
+
+        
+        let cancelPreviousPromiseChain = undefined;
+        // Query all houseID subcollections for documents where houseID matches the houseID of the current house
+        const usersColGroupQ = query(collectionGroup(db, 'houseIDs'), where('houseID', '==', route.params.houseID))
+        // Snapshot of houseIDs collection in users object 
+        const unsubscribe1 = onSnapshot(usersColGroupQ, 
+            (snapshot) => {
+                if(cancelPreviousPromiseChain) cancelPreviousPromiseChain(); // Cancel previous run if possible
+
+                let cancelled = false; 
+                cancelPreviousPromiseChain = () => cancelled = true;
+
+                getUsersForEachPost(snapshot/*.docs*/)
+                .then((entitiesArray) => {
+                    if(cancelled) return; // cancelled, do nothing
+                    setLoading(false);
+                    setUsers(entitiesArray);
+                })
+                .catch((error) => {
+                    if(cancelled) return; // cancelled, do nothing
+                    setLoading(false);
+                    console.log(error);
+                })
+            }, 
+            (error) => {
+                if(cancelPreviousPromiseChain) cancelPreviousPromiseChain(); // Now the listener has errored, cancel using any stale data
+                setLoading(false);
+                console.log(error);
+            }
+        );
+
+        return () => {
+            unsubscribe1(); // detaches the listener
+        }
+    }, []);
+
+    console.log(users)
     // Render entrances
+
+    const renderUsers = ({item, index}) => {
+        return (
+                <View style={styles.entityContainer}>
+                    <Text style={styles.entityText}>
+                        User: {"\t"} {item.fullName} 
+                    </Text>
+                </View>
+        );
+    }
+
     const renderEntrances = ({item, index}) => {
         return (
                 <View style={styles.entityContainer}>
@@ -236,6 +309,20 @@ export default function HousesScreen({route}) {
             { !entrances.length && <Text>No entrances logged for this house!</Text> }
             { !loading && (entrances && (
                 <View style={styles.listContainer}>
+                    <FlatList
+                        data={users}
+                        renderItem={renderUsers}
+                        keyExtractor={(item) => item.id}
+                        removeClippedSubviews={true}
+                        ListHeaderComponent={()=> {
+                            return (
+                                <View style={styles.header}> 
+                                    <Text style={styles.headerText}>Users in {route.params.name} 
+                                        {"\n"}</Text> 
+                                </View>
+                            )
+                        }}
+                    />
                     <FlatList
                         data={entrances}
                         renderItem={renderEntrances}

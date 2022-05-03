@@ -145,7 +145,8 @@ export default function HomeScreen(props) {
             
             if(!houseSnapshot.empty) { // If the house reference exists, set the user doc to have the houseID
                 const data = {
-                    houseID: entityTextAdd
+                    houseID: entityTextAdd, // Used in displaying houses a user is a member of
+                    fullName: userName // Used in displaying member users in a house
                 };
                 const houseIDsDocRef = doc(db, 'users', `${userID}`, 'houseIDs', `${entityTextAdd}`);
                 setDoc(houseIDsDocRef, data)
