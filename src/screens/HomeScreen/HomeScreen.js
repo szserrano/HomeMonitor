@@ -217,9 +217,11 @@ export default function HomeScreen(props) {
                 })
             }}>
                 <View>
-                    <Text style={styles.entityText}>
-                        {index+1}. {"\t"} {item.name} {"\n"}HouseID: {item.houseID}
+                    <Text style={styles.entityTextName}>
+                        {item.name} 
                     </Text>
+                    <Text style={styles.entityTextID}>HouseID:</Text>
+                    <Text style={styles.entityText} selectable={true}>{item.houseID}</Text>
                 </View>
             </TouchableOpacity>
         );
@@ -227,9 +229,9 @@ export default function HomeScreen(props) {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Notifications')}>
+            {/* <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Notifications')}>
                     <Text style={styles.buttonText}>Notifications</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <View style={styles.formContainer}>
                 <TextInput
                     style={styles.input}

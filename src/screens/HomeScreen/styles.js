@@ -54,7 +54,20 @@ export default StyleSheet.create({
     entityText: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#333333'
+        color: '#333333',
+        alignSelf: "center"
+    },
+    entityTextName: {
+        fontSize: 18,
+        fontStyle: 'italic',
+        fontWeight: 'bold',
+        color: '#333333',
+        alignSelf: "center"
+    },
+    entityTextID: {
+        fontSize: 18,
+        color: '#333333',
+        alignSelf: "center"
     },
     entityButton: {
         color: '#D4F1F4'

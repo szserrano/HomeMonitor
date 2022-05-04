@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, Modal, FlatList, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Pressable, Modal, FlatList, ScrollView, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import styles from './styles';
 import axios from "axios";
-import { signOut } from 'firebase/auth';
 import { collection, collectionGroup, query, where, doc, getDoc, getDocs, addDoc, onSnapshot, setDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config';
 import { useNavigation } from '@react-navigation/native';
+import { AntDesign } from '@expo/vector-icons';
 
 export default function HousesScreen({route}) {
     const navigation = useNavigation();
@@ -14,6 +14,9 @@ export default function HousesScreen({route}) {
 
     // Used for showing modal
     const [modalVisible, setModalVisible] = useState(false);
+
+    // Used for keeping state of accordion list
+    const [expanded, setExpanded] = useState(false); 
 
     const [loading, setLoading] = useState(true);
 
@@ -172,7 +175,6 @@ export default function HousesScreen({route}) {
             for(var i = 0; i < length; i++){
                 result += characters.charAt(Math.floor(Math.random() * charactersLength));
             }
-            console.log(result);
             return result;
         }
 
@@ -224,8 +226,8 @@ export default function HousesScreen({route}) {
         }
     }, []);
 
-    console.log(users)
     // Render entrances
+    const handlePress = () => { setExpanded(!expanded) }
 
     const renderUsers = ({item, index}) => {
         return (
@@ -240,9 +242,13 @@ export default function HousesScreen({route}) {
     const renderEntrances = ({item, index}) => {
         return (
                 <View style={styles.entityContainer}>
+                    <Text style={styles.entityTextName}>
+                        {item.name}
+                    </Text>
+                    <Text style={styles.entityTextID}>{"\n"}Entrance ID:</Text>
+                    <Text style={styles.entityText}>{item.id}</Text>
                     <Text style={styles.entityText}>
-                        Entrance: {"\t"} {item.name} {"\n\n"}Entrance ID: {item.id} {"\n\n"}
-                        Status: {item.status} {"\n"} 
+                        {"\n"}Status: {item.status} {"\n"} 
                         {item.status == "open" && (<Text style={styles.entityText}>Last {item.status}ed on:{"\n"}{item.created_at}</Text>)}
                         {item.status == "closed" && (<Text style={styles.entityText}>Last {item.status} on:{"\n"}{item.created_at}</Text>)}
                     </Text>
@@ -267,15 +273,26 @@ export default function HousesScreen({route}) {
                             </View>
                         </View>
                     </Modal>
-                    <Pressable
-                        style={[styles.button, styles.buttonOpen]}
-                        onPress={() => {
-                            setModalVisible(true);
-                            onEditButtonPress();
-                        }}
-                    >
-                        <Text style={styles.buttonText}>Edit</Text>
-                    </Pressable>
+                    <View style={{flexDirection: 'row'}}>
+                        <Pressable
+                            style={[styles.button, styles.buttonOpen]}
+                            onPress={() => {
+                                setModalVisible(true);
+                                onRenameButtonPress();
+                            }}
+                        >
+                            <Text style={styles.buttonText}>Rename</Text>
+                        </Pressable>
+                        <Pressable
+                            style={[styles.removeButton, styles.buttonOpen]}
+                            onPress={() => {
+                                setModalVisible(true);
+                                onRemoveButtonPress();
+                            }}
+                        >
+                            <Text style={styles.buttonText}>Remove</Text>
+                        </Pressable>
+                    </View>
                 </View>
         );
     }
@@ -294,22 +311,31 @@ export default function HousesScreen({route}) {
         );
     }
 
-    const onEditButtonPress = () => {
+    const onRenameButtonPress = () => {
+        //IMPLEMENT
+        console.log("Edit button pressed!")
+    }
+
+    const onRemoveButtonPress = () => {
         //IMPLEMENT
         console.log("Edit button pressed!")
     }
 
     return(
         <View style={styles.container}>
-            <TouchableOpacity style={styles.button} onPress={onChatButtonPress}>
-                <Text style={styles.buttonText}>Chat</Text>
-            </TouchableOpacity>
-            <Text style={styles.entityText}>Chat with users in {route.params.name}</Text>
+            <View style={styles.centeredView}>
+                <TouchableOpacity style={styles.chatButton} onPress={onChatButtonPress}>
+                    <Text style={styles.buttonText}>Chat with users in {route.params.name}</Text>
+                </TouchableOpacity>
+            </View>
             {loading && <Text>Loading</Text>}
-            { !entrances.length && <Text>No entrances logged for this house!</Text> }
             { !loading && (entrances && (
                 <View style={styles.listContainer}>
                     <FlatList
+                        style={styles.flatList}
+                        maxHeight={225}
+                        minHeight={70}
+                        nestedScrollEnabled={true}
                         data={users}
                         renderItem={renderUsers}
                         keyExtractor={(item) => item.id}
@@ -317,13 +343,21 @@ export default function HousesScreen({route}) {
                         ListHeaderComponent={()=> {
                             return (
                                 <View style={styles.header}> 
-                                    <Text style={styles.headerText}>Users in {route.params.name} 
-                                        {"\n"}</Text> 
+                                    <Text style={styles.headerText}>Users in {route.params.name}</Text> 
                                 </View>
                             )
                         }}
                     />
+                    <Text>{"\n"}</Text>
+                    { !entrances.length ? 
+                        <View style={styles.noEntityContainer}>
+                            <Text style={styles.entityText}>No entrances logged for this house!</Text>
+                        </View>
+                        : 
                     <FlatList
+                        style={styles.flatList}
+                        maxHeight={325}
+                        nestedScrollEnabled={true}
                         data={entrances}
                         renderItem={renderEntrances}
                         keyExtractor={(item) => item.id}
@@ -331,14 +365,17 @@ export default function HousesScreen({route}) {
                         ListHeaderComponent={()=> {
                             return (
                                 <View style={styles.header}> 
-                                    <Text style={styles.headerText}>{route.params.name}'s Entrances 
-                                        {"\n(Tap on an Entrance to view its details!)"}</Text> 
+                                    <Text style={styles.headerText}>{route.params.name}'s Entrances</Text> 
+                                    <Text style={styles.headerText}>{"(Tap on an Entrance to view its details!)"}</Text> 
                                 </View>
                             )
                         }}
                     />
+                    }
                 </View>)
             )}
+            <Text style={styles.houseIDText}>Long Press to Copy {route.params.name}'s House ID:</Text>
+            <Text style={styles.entityText} selectable={true}>{route.params.houseID}</Text>
         </View>
     )
 }
