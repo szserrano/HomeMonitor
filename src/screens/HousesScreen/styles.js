@@ -7,14 +7,14 @@ export default StyleSheet.create({
     },
     formContainer: {
         flexDirection: 'row',
-        height: 80,
-        marginTop: 40,
-        marginBottom: 20,
-        flex: 1,
-        paddingTop: 10,
-        paddingBottom: 10,
-        paddingLeft: 30,
-        paddingRight: 30,
+        //height: 80,
+        //marginTop: 40,
+        //marginBottom: 20,
+        //flex: 1,
+        //paddingTop: 10,
+        //paddingBottom: 10,
+        //paddingLeft: 30,
+        //paddingRight: 30,
         justifyContent: 'center',
         alignItems: 'center'
     },
@@ -22,10 +22,12 @@ export default StyleSheet.create({
         height: 48,
         borderRadius: 5,
         overflow: 'hidden',
-        backgroundColor: 'white',
+        backgroundColor: '#B1D8B7',
         paddingLeft: 16,
-        flex: 1,
-        marginRight: 5
+        paddingRight: 16,
+        width: 250
+        //flex: 1,
+        //marginRight: 5
     },
     button: {
         margin: 10,
@@ -62,15 +64,25 @@ export default StyleSheet.create({
         alignItems: "center",
         justifyContent: 'center'
     },
+    deleteButton: {
+        height: 47,
+        borderRadius: 5,
+        backgroundColor: '#D01110',
+        width: 300,
+        alignItems: "center",
+        justifyContent: 'center',
+        marginTop: 20
+    },
     buttonText: {
         color: 'white',
         fontSize: 16
     },
     flatList: {
-        flexGrow: 0
+        flexGrow: 0,
+        width: 350
     },
     listContainer: {
-        marginTop: 20,
+        marginTop: 10,
         padding: 10,
         minHeight: 70
     },
@@ -122,7 +134,7 @@ export default StyleSheet.create({
     header: {
         //backgroundColor: '#000C66',
         borderRadius: 5,
-        flex: 1,
+        //flex: 1,
         height: 30,
         justifyContent: 'center',
         alignItems: 'center',
@@ -131,13 +143,24 @@ export default StyleSheet.create({
     },
     headerText: {
         color: '#000C66',
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold'
+    },
+    headerView: {
+        justifyContent: "center",
+        alignItems: "center",
+        // margin: 2
     },
     centeredView: {
         justifyContent: "center",
         alignItems: "center",
-        margin: 7
+        flex: 1
+        // margin: 2
+    },
+    chatButtonView: {
+        justifyContent: "center",
+        alignItems: "center",
+        margin: 10
     },
     modalView: {
         margin: 20,

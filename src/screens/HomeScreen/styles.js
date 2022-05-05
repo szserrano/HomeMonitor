@@ -40,8 +40,13 @@ export default StyleSheet.create({
         padding: 20,
         flex: 1,
     },
+    flatList: {
+        flexGrow: 0,
+        width: 350
+    },
     entityContainer: {
-        marginTop: 16,
+        margin: 10,
+        width: 250,
         backgroundColor: '#D4F1F4',
         borderRadius: 15,
         borderBottomColor: '#cccccc',
@@ -51,10 +56,28 @@ export default StyleSheet.create({
         paddingBottom: 5,
         alignItems: 'center',
     },
+    leaveEntityContainer: {
+        margin: 10,
+        width: 70,
+        height: 75,
+        backgroundColor: '#D01110',
+        borderRadius: 10,
+        borderBottomColor: '#cccccc',
+        borderBottomWidth: 1,
+        padding: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     entityText: {
         fontSize: 18,
         fontWeight: 'bold',
         color: '#333333',
+        alignSelf: "center"
+    },
+    leaveEntityText: {
+        fontSize: 18,
+        // fontWeight: 'bold',
+        color: 'white',
         alignSelf: "center"
     },
     entityTextName: {
@@ -75,11 +98,20 @@ export default StyleSheet.create({
     header: {
         //backgroundColor: '#000C66',
         borderRadius: 5,
-        flex: 1,
-        height: 50,
+        //flex: 1,
+        //height: 50,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20
+        marginBottom: 10
+    },
+    listHeader: {
+        //backgroundColor: '#000C66',
+        borderRadius: 5,
+        //flex: 1,
+        //height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        //marginBottom: 10
     },
     headerText: {
         color: '#000C66',

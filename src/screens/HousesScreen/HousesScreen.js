@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, Modal, FlatList, ScrollView, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, FlatList, ScrollView, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import styles from './styles';
 import axios from "axios";
 import { collection, collectionGroup, query, where, doc, getDoc, getDocs, addDoc, onSnapshot, setDoc, updateDoc, arrayRemove } from 'firebase/firestore';
@@ -12,8 +12,9 @@ export default function HousesScreen({route}) {
 
     const userID = route.params.extraData.id
 
-    // Used for showing modal
-    const [modalVisible, setModalVisible] = useState(false);
+    // Used for showing modals
+    const [renameModalVisible, setRenameModalVisible] = useState(false);
+    const [removeModalVisible, setRemoveModalVisible] = useState(false);
 
     // Used for keeping state of accordion list
     const [expanded, setExpanded] = useState(false); 
@@ -22,6 +23,7 @@ export default function HousesScreen({route}) {
 
     // Used in Adding/Leaving a house in onAddButtonPress function
     const [entityTextAdd, setEntityTextAdd] = useState('');
+    const [entityTextRename, setEntityTextRename] = useState('');
     const [entityTextCreate, setEntityTextCreate] = useState('');
 
     // Used to display entrances and users within the current house
@@ -164,7 +166,7 @@ export default function HousesScreen({route}) {
         return () => {
             unsubscribe(); // detaches the listener
         }
-    }, []);
+    }, [entityTextRename]);
 
     useEffect(() => {
         // Random ID generator for the flatlist of users for each post
@@ -226,9 +228,6 @@ export default function HousesScreen({route}) {
         }
     }, []);
 
-    // Render entrances
-    const handlePress = () => { setExpanded(!expanded) }
-
     const renderUsers = ({item, index}) => {
         return (
                 <View style={styles.entityContainer}>
@@ -255,43 +254,89 @@ export default function HousesScreen({route}) {
                     <Modal
                         animationType="slide"
                         transparent={true}
-                        visible={modalVisible}
+                        visible={renameModalVisible}
                         onRequestClose={() => {
                         Alert.alert("Modal has been closed.");
-                        setModalVisible(!modalVisible);
+                        setRenameModalVisible(!renameModalVisible);
                         }}
                     >
                         <View style={styles.centeredView}>
                             <View style={styles.modalView}>
-                                <Text style={styles.modalText}>Hello World!</Text>
-                                <Pressable
+                                <Text style={styles.modalText}>Rename This Entrance</Text>
+                                <View style={styles.formContainer}>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder={item.name}
+                                        placeholderTextColor="#aaaaaa"
+                                        onChangeText={(text) => setEntityTextRename(text)}
+                                        value={entityTextRename}
+                                        underlineColorAndroid="transparent"
+                                        autoCapitalize="none"
+                                    />
+                                </View>
+                                <TouchableOpacity>
+                                <TouchableOpacity
                                 style={[styles.button, styles.buttonClose]}
-                                onPress={() => setModalVisible(!modalVisible)}
+                                onPress={() => {
+                                    updateDoc(doc(db, 'entrances', item.id), {name:entityTextRename});
+                                    setRenameModalVisible(!renameModalVisible)
+                                    setEntityTextRename('');
+                                }}
                                 >
-                                    <Text style={styles.buttonText}>Hide Modal</Text>
-                                </Pressable>
+                                    <Text style={styles.buttonText}>Rename</Text>
+                                </TouchableOpacity>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </Modal>
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={removeModalVisible}
+                        onRequestClose={() => {
+                        Alert.alert("Modal has been closed.");
+                        setRemoveModalVisible(!removeModalVisible);
+                        }}
+                    >
+                        <View style={styles.centeredView}>
+                            <View style={styles.modalView}>
+                                <Text style={styles.modalText}>Are you sure you want to remove this entrance?</Text>
+                                <View style={{flexDirection: 'row'}}>
+                                    <TouchableOpacity
+                                    style={[styles.button, styles.buttonClose]}
+                                    onPress={() => setRemoveModalVisible(!removeModalVisible)}
+                                    >
+                                        <Text style={styles.buttonText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                    style={[styles.removeButton, styles.buttonClose]}
+                                    onPress={() => setRemoveModalVisible(!removeModalVisible)}
+                                    >
+                                        <Text style={styles.buttonText}>Remove</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
                     </Modal>
                     <View style={{flexDirection: 'row'}}>
-                        <Pressable
+                        <TouchableOpacity
                             style={[styles.button, styles.buttonOpen]}
                             onPress={() => {
-                                setModalVisible(true);
+                                setRenameModalVisible(true);
                                 onRenameButtonPress();
                             }}
                         >
                             <Text style={styles.buttonText}>Rename</Text>
-                        </Pressable>
-                        <Pressable
+                        </TouchableOpacity>
+                        <TouchableOpacity
                             style={[styles.removeButton, styles.buttonOpen]}
                             onPress={() => {
-                                setModalVisible(true);
+                                setRemoveModalVisible(true);
                                 onRemoveButtonPress();
                             }}
                         >
                             <Text style={styles.buttonText}>Remove</Text>
-                        </Pressable>
+                        </TouchableOpacity>
                     </View>
                 </View>
         );
@@ -300,7 +345,7 @@ export default function HousesScreen({route}) {
     const onChatButtonPress = () => {
         return( // navigate to chat page
             navigation.navigate('Chat', {
-                houseID: route.params.id,
+                houseID: route.params.houseID,
                 name: route.params.name,
                 headerStyle: {
                     backgroundColor: '#EF3340'
@@ -309,6 +354,26 @@ export default function HousesScreen({route}) {
                 extraData: route.params.extraData
             })
         );
+    }
+
+    const onDeleteButtonPress = () => {
+        console.log("DELETE HOUSE BUTTON PRESSED");
+        Alert.alert(
+            "Delete House?",
+            "Are you sure you want to delete "+route.params.name+"?",
+            [
+              { text: "Cancel" },
+              { 
+                text: "Yes",
+                onPress: () => {
+                  console.log("YES PRESSED");
+                }  
+              }
+            ]
+          );
+        // return( // navigate to home page
+        //     navigation.navigate('Home')
+        // );
     }
 
     const onRenameButtonPress = () => {
@@ -323,7 +388,7 @@ export default function HousesScreen({route}) {
 
     return(
         <View style={styles.container}>
-            <View style={styles.centeredView}>
+            <View style={styles.chatButtonView}>
                 <TouchableOpacity style={styles.chatButton} onPress={onChatButtonPress}>
                     <Text style={styles.buttonText}>Chat with users in {route.params.name}</Text>
                 </TouchableOpacity>
@@ -331,6 +396,9 @@ export default function HousesScreen({route}) {
             {loading && <Text>Loading</Text>}
             { !loading && (entrances && (
                 <View style={styles.listContainer}>
+                    <View style={styles.headerView}> 
+                        <Text style={styles.headerText}>Users in {route.params.name}</Text> 
+                    </View>
                     <FlatList
                         style={styles.flatList}
                         maxHeight={225}
@@ -340,15 +408,11 @@ export default function HousesScreen({route}) {
                         renderItem={renderUsers}
                         keyExtractor={(item) => item.id}
                         removeClippedSubviews={true}
-                        ListHeaderComponent={()=> {
-                            return (
-                                <View style={styles.header}> 
-                                    <Text style={styles.headerText}>Users in {route.params.name}</Text> 
-                                </View>
-                            )
-                        }}
                     />
                     <Text>{"\n"}</Text>
+                    <View style={styles.headerView}> 
+                        <Text style={styles.headerText}>{route.params.name}'s Entrances</Text> 
+                    </View>
                     { !entrances.length ? 
                         <View style={styles.noEntityContainer}>
                             <Text style={styles.entityText}>No entrances logged for this house!</Text>
@@ -362,20 +426,24 @@ export default function HousesScreen({route}) {
                         renderItem={renderEntrances}
                         keyExtractor={(item) => item.id}
                         removeClippedSubviews={true}
-                        ListHeaderComponent={()=> {
-                            return (
-                                <View style={styles.header}> 
-                                    <Text style={styles.headerText}>{route.params.name}'s Entrances</Text> 
-                                    <Text style={styles.headerText}>{"(Tap on an Entrance to view its details!)"}</Text> 
-                                </View>
-                            )
-                        }}
+                        // ListHeaderComponent={()=> {
+                        //     return (
+                        //         <View style={styles.header}>  
+                        //             <Text style={styles.headerText}>{"(Tap on an Entrance to view its details!)"}</Text> 
+                        //         </View>
+                        //     )
+                        // }}
                     />
                     }
                 </View>)
             )}
             <Text style={styles.houseIDText}>Long Press to Copy {route.params.name}'s House ID:</Text>
             <Text style={styles.entityText} selectable={true}>{route.params.houseID}</Text>
+            { route.params.extraData.id == route.params.ownerID && (
+                <TouchableOpacity style={styles.deleteButton} onPress={onDeleteButtonPress}>
+                    <Text style={styles.buttonText}>Delete {route.params.name}</Text>
+                </TouchableOpacity>
+            )}
         </View>
     )
 }

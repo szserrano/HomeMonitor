@@ -10,7 +10,7 @@ export default function ChatScreen({route}){
   const userID = route.params.extraData.id
   const userName = route.params.extraData.fullName
   const email = route.params.extraData.email
-  const houseID = route.params.extraData.houseID
+  const houseID = route.params.houseID
   const chatID = "DOEidq74bBRSwZ5vYpJC58pux5r1tpuV5l3Pd8XXhRywl7JAm0iSpil1"
   const navigation = useNavigation();
   
@@ -63,6 +63,8 @@ export default function ChatScreen({route}){
       })
     })
   }, [])
+
+  console.log("CHAT ROUTE PARAMS:",route.params);
 
   return (
     <GiftedChat

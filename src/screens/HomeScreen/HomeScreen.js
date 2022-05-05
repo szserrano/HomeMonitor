@@ -203,27 +203,37 @@ export default function HomeScreen(props) {
         }
     }
 
+    const onLeaveHouseButtonPress = () => {
+        console.log("LEAVE HOUSE BUTTON PRESSED")
+    }
+
     const renderEntity = ({item, index}) => {
         return (
-            <TouchableOpacity style={styles.entityContainer} onPress={() => {
-                navigation.navigate('Houses', {
-                    houseID: item.houseID,
-                    name: item.name,
-                    headerStyle: {
-                        backgroundColor: '#81B622',
-                    },
-                    headerTintColor: 'black',
-                    extraData: props.extraData
-                })
-            }}>
-                <View>
-                    <Text style={styles.entityTextName}>
-                        {item.name} 
-                    </Text>
-                    <Text style={styles.entityTextID}>HouseID:</Text>
-                    <Text style={styles.entityText} selectable={true}>{item.houseID}</Text>
-                </View>
-            </TouchableOpacity>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <TouchableOpacity style={styles.entityContainer} onPress={() => {
+                    navigation.navigate('Houses', {
+                        houseID: item.houseID,
+                        name: item.name,
+                        ownerID: item.ownerID,
+                        headerStyle: {
+                            backgroundColor: '#81B622',
+                        },
+                        headerTintColor: 'black',
+                        extraData: props.extraData
+                    })
+                }}>
+                    <View>
+                        <Text style={styles.entityTextName}>
+                            {item.name} 
+                        </Text>
+                        <Text style={styles.entityTextID}>HouseID:</Text>
+                        <Text style={styles.entityText} selectable={true}>{item.houseID}</Text>
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.leaveEntityContainer} onPress={onLeaveHouseButtonPress}>
+                    <Text style={styles.leaveEntityText}>Leave</Text>
+                </TouchableOpacity>
+            </View>
         );
     }
 
@@ -264,16 +274,19 @@ export default function HomeScreen(props) {
             {loading && <Text>Loading</Text>}
             { !loading && (entities && (
                 <View style={styles.listContainer}>
+                    <View style={styles.header}> 
+                        <Text style={styles.headerText}>{userName}'s Houses</Text>
+                    </View>
                     <FlatList
+                        style={styles.flatList}
                         data={entities}
                         renderItem={renderEntity}
                         keyExtractor={(item) => item.id}
                         removeClippedSubviews={true}
                         ListHeaderComponent={()=> {
                             return (
-                                <View style={styles.header}> 
-                                    <Text style={styles.headerText}>{userName}'s Houses 
-                                        {"\n(Tap on a House to view its details!)"}</Text> 
+                                <View style={styles.listHeader}> 
+                                    <Text style={styles.headerText}>{"(Tap on a House to view its details!)"}</Text> 
                                 </View>
                             )
                         }}
