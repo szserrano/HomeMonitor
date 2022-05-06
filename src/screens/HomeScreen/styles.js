@@ -31,6 +31,15 @@ export default StyleSheet.create({
         alignItems: "center",
         justifyContent: 'center'
     },
+    leaveButton: {
+        marginLeft: 35,
+        height: 47,
+        borderRadius: 5,
+        backgroundColor: '#E10032',
+        width: 80,
+        alignItems: "center",
+        justifyContent: 'center'
+    },
     buttonText: {
         color: 'white',
         fontSize: 16
@@ -46,7 +55,7 @@ export default StyleSheet.create({
     },
     entityContainer: {
         margin: 10,
-        width: 250,
+        //width: 250,
         backgroundColor: '#D4F1F4',
         borderRadius: 15,
         borderBottomColor: '#cccccc',
@@ -61,6 +70,18 @@ export default StyleSheet.create({
         width: 70,
         height: 75,
         backgroundColor: '#D01110',
+        borderRadius: 10,
+        borderBottomColor: '#cccccc',
+        borderBottomWidth: 1,
+        padding: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    cancelEntityContainer: {
+        margin: 10,
+        width: 70,
+        height: 75,
+        backgroundColor: '#788eec',
         borderRadius: 10,
         borderBottomColor: '#cccccc',
         borderBottomWidth: 1,
@@ -117,5 +138,30 @@ export default StyleSheet.create({
         color: '#000C66',
         fontSize: 18,
         fontWeight: 'bold'
+    },
+    centeredView: {
+        justifyContent: "center",
+        alignItems: "center",
+        flex: 1
+        // margin: 2
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 35,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5
+    },
+    modalText: {
+        marginBottom: 15,
+        textAlign: "center"
     },
 })

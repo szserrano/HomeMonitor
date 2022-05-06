@@ -64,17 +64,30 @@ export default StyleSheet.create({
         alignItems: "center",
         justifyContent: 'center'
     },
+    leaveButton: {
+        height: 47,
+        borderRadius: 5,
+        backgroundColor: '#FFDB15',
+        width: 140,
+        alignItems: "center",
+        justifyContent: 'center',
+        marginRight: 10
+    },
     deleteButton: {
         height: 47,
         borderRadius: 5,
         backgroundColor: '#D01110',
-        width: 300,
+        width: 140,
         alignItems: "center",
         justifyContent: 'center',
-        marginTop: 20
+        marginLeft: 10
     },
     buttonText: {
         color: 'white',
+        fontSize: 16
+    },
+    leaveButtonText: {
+        color: 'black',
         fontSize: 16
     },
     flatList: {
@@ -82,12 +95,12 @@ export default StyleSheet.create({
         width: 350
     },
     listContainer: {
-        marginTop: 10,
+        //marginTop: 10,
         padding: 10,
         minHeight: 70
     },
     entityContainer: {
-        marginTop: 16,
+        marginTop: 7,
         backgroundColor: '#D1E2C4',
         borderRadius: 25,
         borderBottomColor: '#cccccc',
@@ -149,7 +162,7 @@ export default StyleSheet.create({
     headerView: {
         justifyContent: "center",
         alignItems: "center",
-        // margin: 2
+        margin: 2
     },
     centeredView: {
         justifyContent: "center",

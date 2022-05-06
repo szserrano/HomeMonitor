@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Modal, FlatList, ScrollView, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import styles from './styles';
 import axios from "axios";
-import { collection, collectionGroup, query, where, doc, getDoc, getDocs, addDoc, onSnapshot, setDoc, updateDoc, arrayRemove } from 'firebase/firestore';
+import { collection, collectionGroup, query, where, doc, getDoc, getDocs, addDoc, onSnapshot, setDoc, updateDoc, arrayRemove, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons';
@@ -15,9 +15,7 @@ export default function HousesScreen({route}) {
     // Used for showing modals
     const [renameModalVisible, setRenameModalVisible] = useState(false);
     const [removeModalVisible, setRemoveModalVisible] = useState(false);
-
-    // Used for keeping state of accordion list
-    const [expanded, setExpanded] = useState(false); 
+    const [addModalVisible, setAddModalVisible] = useState(false);
 
     const [loading, setLoading] = useState(true);
 
@@ -37,6 +35,7 @@ export default function HousesScreen({route}) {
     console.log("ROUTE PARAMS:", route.params);
     const entranceIDsColRef = collection(db, 'houses', `${route.params.houseID}`, 'entranceIDs'); // Collection reference for entrances collection for firebase access
 
+    // Grab latest entrance update, display list of entrances, update names when rename button is used
     useEffect(() => {
         // Function to fetch data from webhook.site of new entrance update
         const fetchData = async () => {
@@ -168,6 +167,7 @@ export default function HousesScreen({route}) {
         }
     }, [entityTextRename]);
 
+    // Grab user data for list of users
     useEffect(() => {
         // Random ID generator for the flatlist of users for each post
         function makeID(length) {
@@ -274,18 +274,25 @@ export default function HousesScreen({route}) {
                                         autoCapitalize="none"
                                     />
                                 </View>
-                                <TouchableOpacity>
-                                <TouchableOpacity
-                                style={[styles.button, styles.buttonClose]}
-                                onPress={() => {
-                                    updateDoc(doc(db, 'entrances', item.id), {name:entityTextRename});
-                                    setRenameModalVisible(!renameModalVisible)
-                                    setEntityTextRename('');
-                                }}
-                                >
-                                    <Text style={styles.buttonText}>Rename</Text>
-                                </TouchableOpacity>
-                                </TouchableOpacity>
+                                <View style={{flexDirection: 'row'}}>
+                                    <TouchableOpacity
+                                    style={[styles.button, styles.buttonClose]}
+                                    onPress={() => setRenameModalVisible(!renameModalVisible)}
+                                    >
+                                        <Text style={styles.buttonText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                    style={[styles.button, styles.buttonClose]}
+                                    onPress={() => {
+                                        if(entityTextRename.length) updateDoc(doc(db, 'entrances', item.id), {name:entityTextRename});
+                                        else Alert.alert("Cannot assign an empty name to an entrance","",[{text: "Okay!"}]);
+                                        setRenameModalVisible(!renameModalVisible)
+                                        setEntityTextRename('');
+                                    }}
+                                    >
+                                        <Text style={styles.buttonText}>Rename</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
                     </Modal>
@@ -323,7 +330,6 @@ export default function HousesScreen({route}) {
                             style={[styles.button, styles.buttonOpen]}
                             onPress={() => {
                                 setRenameModalVisible(true);
-                                onRenameButtonPress();
                             }}
                         >
                             <Text style={styles.buttonText}>Rename</Text>
@@ -366,7 +372,9 @@ export default function HousesScreen({route}) {
               { 
                 text: "Yes",
                 onPress: () => {
-                  console.log("YES PRESSED");
+                    deleteDoc(doc(db, 'users', `${route.params.extraData.id}`, 'houseIDs', route.params.houseID));
+                    deleteDoc(doc(db, 'houses', `${route.params.houseID}`));
+                    navigation.goBack();
                 }  
               }
             ]
@@ -376,14 +384,26 @@ export default function HousesScreen({route}) {
         // );
     }
 
-    const onRenameButtonPress = () => {
-        //IMPLEMENT
-        console.log("Edit button pressed!")
+    const onLeaveButtonPress = () => {
+        Alert.alert(
+            "Leave House?",
+            "Are you sure you want to leave "+route.params.name+"?",
+            [
+              { text: "Cancel" },
+              { 
+                text: "Yes",
+                onPress: () => {
+                    deleteDoc(doc(db, 'users', `${route.params.extraData.id}`, 'houseIDs', route.params.houseID));
+                    navigation.goBack();
+                }  
+              }
+            ]
+          );
     }
 
     const onRemoveButtonPress = () => {
         //IMPLEMENT
-        console.log("Edit button pressed!")
+        console.log("Remove button pressed!")
     }
 
     return(
@@ -409,9 +429,65 @@ export default function HousesScreen({route}) {
                         keyExtractor={(item) => item.id}
                         removeClippedSubviews={true}
                     />
-                    <Text>{"\n"}</Text>
-                    <View style={styles.headerView}> 
+                    {/* <Text>{"\n"}</Text> */}
+                    <View style={[styles.headerView, {marginTop: 10}]}> 
                         <Text style={styles.headerText}>{route.params.name}'s Entrances</Text> 
+                    </View>
+                    <View style={styles.chatButtonView}>
+                        <Modal
+                            animationType="slide"
+                            transparent={true}
+                            visible={addModalVisible}
+                            onRequestClose={() => {
+                            Alert.alert("Modal has been closed.");
+                            setAddModalVisible(!addModalVisible);
+                            }}
+                        >
+                            <View style={styles.centeredView}>
+                                <View style={styles.modalView}>
+                                    <Text style={styles.modalText}>Add an Entrance</Text>
+                                    <View style={styles.formContainer}>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder={'Entrance Name'}
+                                            placeholderTextColor="#aaaaaa"
+                                            onChangeText={(text) => setEntityTextAdd(text)}
+                                            value={entityTextAdd}
+                                            underlineColorAndroid="transparent"
+                                            autoCapitalize="none"
+                                        />
+                                    </View>
+                                    <View style={{flexDirection: 'row'}}>
+                                        <TouchableOpacity
+                                        style={[styles.button, styles.buttonClose]}
+                                        onPress={() => setAddModalVisible(!addModalVisible)}
+                                        >
+                                            <Text style={styles.buttonText}>Cancel</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                        style={[styles.button, styles.buttonClose]}
+                                        onPress={() => {
+                                            if(entityTextAdd.length) {
+                                                // addDoc(doc(db, 'entrances'), {
+                                                //     name:entityTextRename
+                                                // });
+                                            }
+                                            else Alert.alert("Cannot assign an empty name to an entrance","",[{text: "Okay!"}]);
+                                            setAddModalVisible(!addModalVisible)
+                                            setEntityTextAdd('');
+                                        }}
+                                        >
+                                            <Text style={styles.buttonText}>Rename</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        </Modal>
+                        <TouchableOpacity style={styles.chatButton} onPress={() => {
+                                setAddModalVisible(true);
+                            }}>
+                            <Text style={styles.buttonText}>Add an entrance</Text>
+                        </TouchableOpacity>
                     </View>
                     { !entrances.length ? 
                         <View style={styles.noEntityContainer}>
@@ -437,13 +513,20 @@ export default function HousesScreen({route}) {
                     }
                 </View>)
             )}
-            <Text style={styles.houseIDText}>Long Press to Copy {route.params.name}'s House ID:</Text>
-            <Text style={styles.entityText} selectable={true}>{route.params.houseID}</Text>
-            { route.params.extraData.id == route.params.ownerID && (
-                <TouchableOpacity style={styles.deleteButton} onPress={onDeleteButtonPress}>
-                    <Text style={styles.buttonText}>Delete {route.params.name}</Text>
-                </TouchableOpacity>
-            )}
+            { route.params.extraData.id == route.params.ownerID ? (
+                <View style={{flexDirection: 'row'}}>
+                    <TouchableOpacity style={styles.leaveButton} onPress={onLeaveButtonPress}>
+                        <Text style={styles.leaveButtonText}>Leave {route.params.name}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.deleteButton} onPress={onDeleteButtonPress}>
+                        <Text style={styles.buttonText}>Delete {route.params.name}</Text>
+                    </TouchableOpacity>
+                </View>
+            ) :
+            <TouchableOpacity style={styles.leaveButton} onPress={onLeaveButtonPress}>
+                <Text style={styles.leaveButtonText}>Leave {route.params.name}</Text>
+            </TouchableOpacity>
+            }
         </View>
     )
 }

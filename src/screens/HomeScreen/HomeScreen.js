@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, FlatList, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import styles from './styles';
 import axios from "axios";
-import { collection, query, where, doc, getDoc, getDocs, addDoc, onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, query, where, doc, getDoc, getDocs, addDoc, deleteDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -12,6 +12,9 @@ const Stack = createStackNavigator();
 export default function HomeScreen(props) {
     // Loading variable to fetch data
     const [loading, setLoading] = useState(true);
+
+    // Leave House modal visibility
+    const [leaveModalVisible, setLeaveModalVisible] = useState(false);
 
     // Used in Adding/Leaving a house in onAddButtonPress function
     const [entityTextAdd, setEntityTextAdd] = useState('');
@@ -203,37 +206,28 @@ export default function HomeScreen(props) {
         }
     }
 
-    const onLeaveHouseButtonPress = () => {
-        console.log("LEAVE HOUSE BUTTON PRESSED")
-    }
-
     const renderEntity = ({item, index}) => {
         return (
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <TouchableOpacity style={styles.entityContainer} onPress={() => {
-                    navigation.navigate('Houses', {
-                        houseID: item.houseID,
-                        name: item.name,
-                        ownerID: item.ownerID,
-                        headerStyle: {
-                            backgroundColor: '#81B622',
-                        },
-                        headerTintColor: 'black',
-                        extraData: props.extraData
-                    })
+            <TouchableOpacity style={styles.entityContainer} onPress={() => {
+                navigation.navigate('Houses', {
+                    houseID: item.houseID,
+                    name: item.name,
+                    ownerID: item.ownerID,
+                    headerStyle: {
+                        backgroundColor: '#81B622',
+                    },
+                    headerTintColor: 'black',
+                    extraData: props.extraData
+                })
                 }}>
-                    <View>
-                        <Text style={styles.entityTextName}>
-                            {item.name} 
-                        </Text>
-                        <Text style={styles.entityTextID}>HouseID:</Text>
-                        <Text style={styles.entityText} selectable={true}>{item.houseID}</Text>
-                    </View>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.leaveEntityContainer} onPress={onLeaveHouseButtonPress}>
-                    <Text style={styles.leaveEntityText}>Leave</Text>
-                </TouchableOpacity>
-            </View>
+                <View>
+                    <Text style={styles.entityTextName}>
+                        {item.name} 
+                    </Text>
+                    <Text style={styles.entityTextID}>HouseID:</Text>
+                    <Text style={styles.entityText} selectable={true}>{item.houseID}</Text>
+                </View>
+            </TouchableOpacity>
         );
     }
 
