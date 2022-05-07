@@ -317,7 +317,13 @@ export default function HousesScreen({route}) {
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                     style={[styles.removeButton, styles.buttonClose]}
-                                    onPress={() => setRemoveModalVisible(!removeModalVisible)}
+                                    onPress={() => {
+                                        console.log("REMOVE BUTTON PRESSED ON", item.name)
+                                        console.log("| ID:", item.id)
+                                        deleteDoc(doc(db, 'houses', `${route.params.houseID}`, 'entranceIDs', item.id));
+                                        deleteDoc(doc(db, 'entrances', item.id));
+                                        setRemoveModalVisible(!removeModalVisible)
+                                    }}
                                     >
                                         <Text style={styles.buttonText}>Remove</Text>
                                     </TouchableOpacity>
@@ -338,7 +344,6 @@ export default function HousesScreen({route}) {
                             style={[styles.removeButton, styles.buttonOpen]}
                             onPress={() => {
                                 setRemoveModalVisible(true);
-                                onRemoveButtonPress();
                             }}
                         >
                             <Text style={styles.buttonText}>Remove</Text>
@@ -466,18 +471,29 @@ export default function HousesScreen({route}) {
                                         </TouchableOpacity>
                                         <TouchableOpacity
                                         style={[styles.button, styles.buttonClose]}
-                                        onPress={() => {
+                                        onPress={async () => {
                                             if(entityTextAdd.length) {
-                                                // addDoc(doc(db, 'entrances'), {
-                                                //     name:entityTextRename
-                                                // });
+                                                const entranceIDsDocRef = await addDoc(collection(db, 'entrances'), {
+                                                    changed: false, 
+                                                    name: entityTextAdd,
+                                                    houseID: route.params.houseID,
+                                                    status: "open",
+                                                    // created_at: "",
+                                                });
+                                                setDoc(doc(db, 'houses', `${route.params.houseID}`, 'entranceIDs', entranceIDsDocRef.id), { // set data of new houseIDs document
+                                                    houseID: route.params.houseID,
+                                                })
+                                                    .then(() => {
+                                                        alert("New entrance created: "+ entityTextAdd);
+                                                    })
+                                                    .catch((error) => alert(error));
                                             }
                                             else Alert.alert("Cannot assign an empty name to an entrance","",[{text: "Okay!"}]);
                                             setAddModalVisible(!addModalVisible)
                                             setEntityTextAdd('');
                                         }}
                                         >
-                                            <Text style={styles.buttonText}>Rename</Text>
+                                            <Text style={styles.buttonText}>Add</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
