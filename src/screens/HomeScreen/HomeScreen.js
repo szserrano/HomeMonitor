@@ -6,6 +6,7 @@ import { collection, query, where, doc, getDoc, getDocs, addDoc, deleteDoc, onSn
 import { db } from '../../firebase/config';
 import { useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { format } from 'date-fns';
 
 const Stack = createStackNavigator();
 
@@ -60,11 +61,17 @@ export default function HomeScreen(props) {
                 console.log("entranceChangeID before if:", entranceChangeID);
                 console.log("response.data.uuid", response.data.uuid);
                 // setEntranceChangeID(1);
+                var date = response.data.created_at
+                var date1 = date.substr(0, date.indexOf(' '));
+                var date2 = date.substr(date.indexOf(' '), date.length);
+                const d1 = date1.split('-');
+                const d2 = date2.split(':');
+                const changed_at = format(new Date(d1[0],d1[1],d1[2],d2[0],d2[1],d2[2]), 'PPpp');
                 if(entranceChangeID != response.data.uuid){
                     var data = {
                         name: values.value2,
                         status: values.value1,
-                        created_at: response.data.created_at,
+                        created_at: changed_at,
                         token_id: response.data.token_id,
                         changed: true
                     };
@@ -77,7 +84,7 @@ export default function HomeScreen(props) {
                     var data = {
                         name: values.value2,
                         status: values.value1,
-                        created_at: response.data.created_at,
+                        created_at: changed_at,
                         token_id: response.data.token_id,
                         changed: false
                     };
@@ -105,27 +112,27 @@ export default function HomeScreen(props) {
                 });
             }
             else { // otherwise query for the document in the houseIDs collection 
-                querySnapshot1.docs.map((doc) => {
+                querySnapshot1.docs.map(async (doc) => {
                     console.log(doc.id);
-                    setEntranceID(doc.id);
-                });
-                const q2 = query(collection(db, 'houses', '1UZeCb4FBwjHqKl0j20k', 'entranceIDs'), where("__name__", "==", entranceID));
-                const querySnapshot2 = await getDocs(q2);
-                
-                // If our entranceData is different, we add/modify the entrance document
-                if(entranceData.changed == true && !querySnapshot2.empty){
-                    //call setDoc on appropriate entrance document
-                    updateDoc(doc(entranceColRef, entranceID), {
-                                entranceID,
-                                ...entranceData,
-                            })
-                            .then(() => console.log("Entrance updated: ", doc(entranceColRef, entranceID).data().entranceID))
-                            .catch((error) => {
-                                console.log('error in RegistrationScreen.js creating a new user w email/pass')
-                                alert(error)
-                                console.log(error)
-                            });
-                }
+                    setEntranceID(doc.id)                    
+                    const q2 = query(collection(db, 'houses', '1UZeCb4FBwjHqKl0j20k', 'entranceIDs'), where("__name__", "==", doc.id));
+                    const querySnapshot2 = await getDocs(q2);
+                    
+                    // If our entranceData is different, we add/modify the entrance document
+                    if(entranceData.changed == true && !querySnapshot2.empty){
+                        //call setDoc on appropriate entrance document
+                        updateDoc(doc(entranceColRef, doc.id), {
+                                    entranceID,
+                                    ...entranceData,
+                                })
+                                .then(() => console.log("Entrance updated: ", doc(entranceColRef, doc.id).data().entranceID))
+                                .catch((error) => {
+                                    console.log('error in RegistrationScreen.js creating a new user w email/pass')
+                                    alert(error)
+                                    console.log(error)
+                                });
+                    }
+                })
             }
         }
 

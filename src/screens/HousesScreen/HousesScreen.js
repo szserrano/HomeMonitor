@@ -5,6 +5,7 @@ import axios from "axios";
 import { collection, collectionGroup, query, where, doc, getDoc, getDocs, addDoc, onSnapshot, setDoc, updateDoc, arrayRemove, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config';
 import { useNavigation } from '@react-navigation/native';
+import { format } from 'date-fns';
 import { AntDesign } from '@expo/vector-icons';
 
 export default function HousesScreen({route}) {
@@ -52,12 +53,19 @@ export default function HousesScreen({route}) {
                 var values = JSON.parse(response.data.content);
                 console.log("entranceChangeID before if:", entranceChangeID);
                 console.log("response.data.uuid", response.data.uuid);
-                //setEntranceChangeID(1);
+                setEntranceChangeID("2");
+                var date = response.data.created_at
+                var date1 = date.substr(0, date.indexOf(' '));
+                var date2 = date.substr(date.indexOf(' '), date.length);
+                const d1 = date1.split('-');
+                const d2 = date2.split(':');
+                const changed_at = format(new Date(d1[0],d1[1],d1[2],d2[0],d2[1],d2[2]), 'PPpp');
+                console.log(changed_at);
                 if(entranceChangeID != response.data.uuid){
                     var data = {
                         name: values.value2,
                         status: values.value1,
-                        created_at: response.data.created_at,
+                        created_at: changed_at,
                         token_id: response.data.token_id,
                         changed: true
                     };
@@ -70,7 +78,7 @@ export default function HousesScreen({route}) {
                     var data = {
                         name: values.value2,
                         status: values.value1,
-                        created_at: response.data.created_at,
+                        created_at: changed_at,
                         token_id: response.data.token_id,
                         changed: false
                     };
@@ -113,27 +121,28 @@ export default function HousesScreen({route}) {
                 });
             }
             else { // otherwise query for the document in the houseIDs collection 
-                querySnapshot1.docs.map((doc) => {
+                querySnapshot1.docs.map(async (doc) => {
                     console.log(doc.id);
                     setEntranceID(doc.id);
-                });
-                const q2 = query(collection(db, 'houses', '1UZeCb4FBwjHqKl0j20k', 'entranceIDs'), where("__name__", "==", entranceID));
-                const querySnapshot2 = await getDocs(q2);
                 
-                // If our entranceData is different, we add/modify the entrance document
-                if(entranceData.changed == true && !querySnapshot2.empty){
-                    //call setDoc on appropriate entrance document
-                    updateDoc(doc(entranceColRef, entranceID), {
-                                entranceID,
-                                ...entranceData,
-                            })
-                            .then(() => console.log("Entrance updated: ", doc(entranceColRef, entranceID).data().entranceID))
-                            .catch((error) => {
-                                console.log('error in RegistrationScreen.js creating a new user w email/pass')
-                                alert(error)
-                                console.log(error)
-                            });
-                }
+                    const q2 = query(collection(db, 'houses', '1UZeCb4FBwjHqKl0j20k', 'entranceIDs'), where("__name__", "==", doc.id));
+                    const querySnapshot2 = await getDocs(q2);
+                    
+                    // If our entranceData is different, we add/modify the entrance document
+                    if(entranceData.changed == true && !querySnapshot2.empty){
+                        //call setDoc on appropriate entrance document
+                        updateDoc(doc(entranceColRef, entranceID), {
+                                    entranceID,
+                                    ...entranceData,
+                                })
+                                .then(() => console.log("Entrance updated: ", doc(entranceColRef, doc.id).data().entranceID))
+                                .catch((error) => {
+                                    console.log('error in RegistrationScreen.js creating a new user w email/pass')
+                                    alert(error)
+                                    console.log(error)
+                                });
+                    }
+                });
             }
         }
         
@@ -260,7 +269,7 @@ export default function HousesScreen({route}) {
                     <Text style={styles.entityTextID}>{"\n"}Entrance ID:</Text>
                     <Text style={styles.entityText}>{item.id}</Text>
                     <Text style={styles.entityText}>
-                        {"\n"}Status: {item.status} {"\n"} 
+                        {"\n"}Status: {item.status} {"\n\n"} 
                         {item.status == "open" && (<Text style={styles.entityText}>Last {item.status}ed on:{"\n"}{item.created_at}</Text>)}
                         {item.status == "closed" && (<Text style={styles.entityText}>Last {item.status} on:{"\n"}{item.created_at}</Text>)}
                     </Text>
@@ -475,12 +484,14 @@ export default function HousesScreen({route}) {
                                         style={[styles.button, styles.buttonClose]}
                                         onPress={async () => {
                                             if(entityTextAdd.length) {
+                                                var d = format(new Date(), 'PPpp');
+                                                console.log("DATE ADD", d);
                                                 const entranceIDsDocRef = await addDoc(collection(db, 'entrances'), {
                                                     changed: false, 
                                                     name: entityTextAdd,
                                                     houseID: route.params.houseID,
                                                     status: "open",
-                                                    // created_at: "",
+                                                    created_at: d,
                                                 });
                                                 setDoc(doc(db, 'houses', `${route.params.houseID}`, 'entranceIDs', entranceIDsDocRef.id), { // set data of new houseIDs document
                                                     houseID: route.params.houseID,
@@ -520,13 +531,6 @@ export default function HousesScreen({route}) {
                         renderItem={renderEntrances}
                         keyExtractor={(item) => item.id}
                         removeClippedSubviews={true}
-                        // ListHeaderComponent={()=> {
-                        //     return (
-                        //         <View style={styles.header}>  
-                        //             <Text style={styles.headerText}>{"(Tap on an Entrance to view its details!)"}</Text> 
-                        //         </View>
-                        //     )
-                        // }}
                     />
                     }
                 </View>)
