@@ -39,7 +39,7 @@ export default StyleSheet.create({
         borderBottomColor: '#cccccc',
         borderBottomWidth: 1,
         paddingTop: 5,
-        paddingLeft: 5,
+        // paddingLeft: 5,
         paddingBottom: 5,
         justifyContent: 'center',
         alignItems: 'center',
