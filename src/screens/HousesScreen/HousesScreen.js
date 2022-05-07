@@ -16,6 +16,8 @@ export default function HousesScreen({route}) {
     const [renameModalVisible, setRenameModalVisible] = useState(false);
     const [removeModalVisible, setRemoveModalVisible] = useState(false);
     const [addModalVisible, setAddModalVisible] = useState(false);
+    const [modID, setModID] = useState('');
+    const [modName, setModName] = useState('');
 
     const [loading, setLoading] = useState(true);
 
@@ -31,9 +33,11 @@ export default function HousesScreen({route}) {
     // Used in fetchData function 
     const [entranceData, setEntranceData] = useState({});
     const [entranceChangeID, setEntranceChangeID] = useState('1');
+    const [entranceID, setEntranceID] = useState('');
 
     console.log("ROUTE PARAMS:", route.params);
     const entranceIDsColRef = collection(db, 'houses', `${route.params.houseID}`, 'entranceIDs'); // Collection reference for entrances collection for firebase access
+    const entranceColRef = collection(db, 'entrances'); // Collection reference for entrances collection for firebase access
 
     // Grab latest entrance update, display list of entrances, update names when rename button is used
     useEffect(() => {
@@ -48,6 +52,7 @@ export default function HousesScreen({route}) {
                 var values = JSON.parse(response.data.content);
                 console.log("entranceChangeID before if:", entranceChangeID);
                 console.log("response.data.uuid", response.data.uuid);
+                //setEntranceChangeID(1);
                 if(entranceChangeID != response.data.uuid){
                     var data = {
                         name: values.value2,
@@ -59,7 +64,7 @@ export default function HousesScreen({route}) {
                     setEntranceData(data);
                     setEntranceChangeID(response.data.uuid);
                     console.log("entranceChangeID != response.data.uuid. Now we set it:", entranceChangeID);
-                    console.log("New update jus dropped: ", entranceData[0]);
+                    console.log("New update jus dropped: ", entranceData);
                 }
                 else {
                     var data = {
@@ -71,7 +76,7 @@ export default function HousesScreen({route}) {
                     };
                     setEntranceData(data);
                     setEntranceChangeID(response.data.uuid);
-                    console.log("No new entrance data to handle, changed flag set to false: ", entranceData[0]);
+                    console.log("No new entrance data to handle, changed flag set to false: ", entranceData);
                 }
             } catch (error) {
                 console.error(error.message);
@@ -94,39 +99,47 @@ export default function HousesScreen({route}) {
             )
         }
 
-        // Random function to create entranceIDs subcollection within houses documents
-        const hold = async () => {
-            const docRef = doc(db, 'houses', `${route.params.houseID}`, 'entranceIDs', 'WunBESVGPHmk0DDeES3t');
-            updateDoc(docRef, {
-                houseID: route.params.houseID
-            })
-        }
-        //hold();
-        
-        /*fetchData();
+        const updateEntrance = async () => {
+            console.log("NAME",entranceData.name);
+            const q1 = query(collection(db, 'entrances'), where("name", "==", entranceData.name));
+            const querySnapshot1 = await getDocs(q1);
+            console.log("EMPTY?",querySnapshot1.empty);
 
-        // If our entranceData is different, we add/modify the entrance document
-        if(entranceData.changed == true && entranceID != "N/A"){
-            //call setDoc on appropriate entrance document
-            updateDoc(doc(entranceColRef, entranceID), {
-                        entranceID,
-                        ...entranceData,
-                    })
-                    .then(() => console.log("Entrance updated: ", doc(entranceColRef, entranceID).data().entranceID))
-                    .catch((error) => {
-                        console.log('error in RegistrationScreen.js creating a new user w email/pass')
-                        alert(error)
-                        console.log(error)
-                    });
-        }
-        else {
-            addDoc(entranceColRef, {...entranceData})
-            .then((docRef) => {
-                updateDoc(docRef, {
-                    id: docRef.id,
+            if(querySnapshot1.empty) { // If we cannot find entrance document in entrances collection, create new document
+                await addDoc(entranceColRef, {...entranceData})
+                .then((docRef) => {
+                    updateDoc(docRef, { id: docRef.id });
+                    setDoc(doc(db, 'houses', '1UZeCb4FBwjHqKl0j20k', 'entranceIDs', docRef.id), {id: docRef.id});
                 });
-            });
-        }*/
+            }
+            else { // otherwise query for the document in the houseIDs collection 
+                querySnapshot1.docs.map((doc) => {
+                    console.log(doc.id);
+                    setEntranceID(doc.id);
+                });
+                const q2 = query(collection(db, 'houses', '1UZeCb4FBwjHqKl0j20k', 'entranceIDs'), where("__name__", "==", entranceID));
+                const querySnapshot2 = await getDocs(q2);
+                
+                // If our entranceData is different, we add/modify the entrance document
+                if(entranceData.changed == true && !querySnapshot2.empty){
+                    //call setDoc on appropriate entrance document
+                    updateDoc(doc(entranceColRef, entranceID), {
+                                entranceID,
+                                ...entranceData,
+                            })
+                            .then(() => console.log("Entrance updated: ", doc(entranceColRef, entranceID).data().entranceID))
+                            .catch((error) => {
+                                console.log('error in RegistrationScreen.js creating a new user w email/pass')
+                                alert(error)
+                                console.log(error)
+                            });
+                }
+            }
+        }
+        
+        fetchData();
+
+        updateEntrance();
         
         navigation.setOptions({ 
             title: route.params.name+' Details',
@@ -266,7 +279,7 @@ export default function HousesScreen({route}) {
                                 <View style={styles.formContainer}>
                                     <TextInput
                                         style={styles.input}
-                                        placeholder={item.name}
+                                        placeholder={modName}
                                         placeholderTextColor="#aaaaaa"
                                         onChangeText={(text) => setEntityTextRename(text)}
                                         value={entityTextRename}
@@ -284,7 +297,7 @@ export default function HousesScreen({route}) {
                                     <TouchableOpacity
                                     style={[styles.button, styles.buttonClose]}
                                     onPress={() => {
-                                        if(entityTextRename.length) updateDoc(doc(db, 'entrances', item.id), {name:entityTextRename});
+                                        if(entityTextRename.length) updateDoc(doc(db, 'entrances', mod), {name:entityTextRename});
                                         else Alert.alert("Cannot assign an empty name to an entrance","",[{text: "Okay!"}]);
                                         setRenameModalVisible(!renameModalVisible)
                                         setEntityTextRename('');
@@ -307,7 +320,7 @@ export default function HousesScreen({route}) {
                     >
                         <View style={styles.centeredView}>
                             <View style={styles.modalView}>
-                                <Text style={styles.modalText}>Are you sure you want to remove this entrance?</Text>
+                                <Text style={styles.modalText}>Are you sure you want to remove the entrance: {modName}?</Text>
                                 <View style={{flexDirection: 'row'}}>
                                     <TouchableOpacity
                                     style={[styles.button, styles.buttonClose]}
@@ -317,11 +330,13 @@ export default function HousesScreen({route}) {
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                     style={[styles.removeButton, styles.buttonClose]}
-                                    onPress={() => {
+                                    onPress={async () => {
                                         console.log("REMOVE BUTTON PRESSED ON", item.name)
-                                        console.log("| ID:", item.id)
-                                        deleteDoc(doc(db, 'houses', `${route.params.houseID}`, 'entranceIDs', item.id));
-                                        deleteDoc(doc(db, 'entrances', item.id));
+                                        console.log("| ID:", modID)
+                                        const filteredData = entrances.filter((toDelete) => toDelete.id !== modID);
+                                        setEntrances(filteredData);
+                                        await deleteDoc(doc(db, 'houses', `${route.params.houseID}`, 'entranceIDs', modID));
+                                        await deleteDoc(doc(db, 'entrances', modID));
                                         setRemoveModalVisible(!removeModalVisible)
                                     }}
                                     >
@@ -335,6 +350,8 @@ export default function HousesScreen({route}) {
                         <TouchableOpacity
                             style={[styles.button, styles.buttonOpen]}
                             onPress={() => {
+                                setModID(item.id);
+                                setModName(item.name);
                                 setRenameModalVisible(true);
                             }}
                         >
@@ -343,6 +360,8 @@ export default function HousesScreen({route}) {
                         <TouchableOpacity
                             style={[styles.removeButton, styles.buttonOpen]}
                             onPress={() => {
+                                setModID(item.id);
+                                setModName(item.name);
                                 setRemoveModalVisible(true);
                             }}
                         >
@@ -389,24 +408,7 @@ export default function HousesScreen({route}) {
         // );
     }
 
-    const onLeaveButtonPress = () => {
-        Alert.alert(
-            "Leave House?",
-            "Are you sure you want to leave "+route.params.name+"?",
-            [
-              { text: "Cancel" },
-              { 
-                text: "Yes",
-                onPress: () => {
-                    deleteDoc(doc(db, 'users', `${route.params.extraData.id}`, 'houseIDs', route.params.houseID));
-                    navigation.goBack();
-                }  
-              }
-            ]
-          );
-    }
-
-    const onRemoveButtonPress = () => {
+    const onRemoveButtonPress = (id) => {
         //IMPLEMENT
         console.log("Remove button pressed!")
     }
@@ -529,20 +531,11 @@ export default function HousesScreen({route}) {
                     }
                 </View>)
             )}
-            { route.params.extraData.id == route.params.ownerID ? (
-                <View style={{flexDirection: 'row'}}>
-                    <TouchableOpacity style={styles.leaveButton} onPress={onLeaveButtonPress}>
-                        <Text style={styles.leaveButtonText}>Leave {route.params.name}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.deleteButton} onPress={onDeleteButtonPress}>
-                        <Text style={styles.buttonText}>Delete {route.params.name}</Text>
-                    </TouchableOpacity>
-                </View>
-            ) :
-            <TouchableOpacity style={styles.leaveButton} onPress={onLeaveButtonPress}>
-                <Text style={styles.leaveButtonText}>Leave {route.params.name}</Text>
-            </TouchableOpacity>
-            }
+            { route.params.extraData.id == route.params.ownerID && (
+                <TouchableOpacity style={styles.deleteButton} onPress={onDeleteButtonPress}>
+                    <Text style={styles.buttonText}>Delete {route.params.name}</Text>
+                </TouchableOpacity>
+            ) }
         </View>
     )
 }

@@ -64,20 +64,20 @@ export default StyleSheet.create({
         alignItems: "center",
         justifyContent: 'center'
     },
-    leaveButton: {
-        height: 47,
-        borderRadius: 5,
-        backgroundColor: '#FFDB15',
-        width: 140,
-        alignItems: "center",
-        justifyContent: 'center',
-        marginRight: 10
-    },
+    // leaveButton: {
+    //     height: 47,
+    //     borderRadius: 5,
+    //     backgroundColor: '#FFDB15',
+    //     width: 140,
+    //     alignItems: "center",
+    //     justifyContent: 'center',
+    //     marginRight: 10
+    // },
     deleteButton: {
         height: 47,
         borderRadius: 5,
         backgroundColor: '#D01110',
-        width: 140,
+        width: 300,
         alignItems: "center",
         justifyContent: 'center',
         marginLeft: 10

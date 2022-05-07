@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, FlatList, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import styles from './styles';
 import axios from "axios";
-import { collection, query, where, doc, getDoc, getDocs, addDoc, deleteDoc, onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, query, where, doc, getDoc, getDocs, addDoc, deleteDoc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -15,6 +15,8 @@ export default function HomeScreen(props) {
 
     // Leave House modal visibility
     const [leaveModalVisible, setLeaveModalVisible] = useState(false);
+    const [modID, setModID] = useState('');
+    const [modName, setModName] = useState('');
 
     // Used in Adding/Leaving a house in onAddButtonPress function
     const [entityTextAdd, setEntityTextAdd] = useState('');
@@ -26,6 +28,7 @@ export default function HomeScreen(props) {
     // Used in fetchData function 
     const [entranceData, setEntranceData] = useState({});
     const [entranceChangeID, setEntranceChangeID] = useState('1');
+    const [entranceID, setEntranceID] = useState('');
 
     // Populate entityRef (houses collection reference for house entities with matching houseIDs)
     const userID = props.extraData.id;
@@ -34,6 +37,7 @@ export default function HomeScreen(props) {
     const userRef = doc(db, 'users', `${userID}`); // User reference for firebase access
     const colRef = collection(db, 'users', `${userID}`, 'houseIDs'); // Collection reference for a specific user's houseIDs collection for firebase access
     const houseColRef = collection(db, 'houses'); // Collection reference for houses collection for firebase access
+    const entranceColRef = collection(db, 'entrances'); // Collection reference for entrances collection for firebase access
 
     // Use the navigation from App.js
     const navigation = useNavigation();
@@ -55,6 +59,7 @@ export default function HomeScreen(props) {
                 var values = JSON.parse(response.data.content);
                 console.log("entranceChangeID before if:", entranceChangeID);
                 console.log("response.data.uuid", response.data.uuid);
+                // setEntranceChangeID(1);
                 if(entranceChangeID != response.data.uuid){
                     var data = {
                         name: values.value2,
@@ -86,6 +91,44 @@ export default function HomeScreen(props) {
             setLoading(false);
         }
 
+        const updateEntrance = async () => {
+            console.log("NAME",entranceData.name);
+            const q1 = query(collection(db, 'entrances'), where("name", "==", entranceData.name));
+            const querySnapshot1 = await getDocs(q1);
+            console.log("EMPTY?",querySnapshot1.empty);
+
+            if(querySnapshot1.empty) { // If we cannot find entrance document in entrances collection, create new document
+                await addDoc(entranceColRef, {...entranceData})
+                .then((docRef) => {
+                    updateDoc(docRef, { houseID: '1UZeCb4FBwjHqKl0j20k' });
+                    setDoc(doc(db, 'houses', '1UZeCb4FBwjHqKl0j20k', 'entranceIDs', docRef.id), {id: docRef.id});
+                });
+            }
+            else { // otherwise query for the document in the houseIDs collection 
+                querySnapshot1.docs.map((doc) => {
+                    console.log(doc.id);
+                    setEntranceID(doc.id);
+                });
+                const q2 = query(collection(db, 'houses', '1UZeCb4FBwjHqKl0j20k', 'entranceIDs'), where("__name__", "==", entranceID));
+                const querySnapshot2 = await getDocs(q2);
+                
+                // If our entranceData is different, we add/modify the entrance document
+                if(entranceData.changed == true && !querySnapshot2.empty){
+                    //call setDoc on appropriate entrance document
+                    updateDoc(doc(entranceColRef, entranceID), {
+                                entranceID,
+                                ...entranceData,
+                            })
+                            .then(() => console.log("Entrance updated: ", doc(entranceColRef, entranceID).data().entranceID))
+                            .catch((error) => {
+                                console.log('error in RegistrationScreen.js creating a new user w email/pass')
+                                alert(error)
+                                console.log(error)
+                            });
+                }
+            }
+        }
+
         // Getting and returning house objects to populate newEntities in parent calling function
         function getHousesForEachPost(houseIDDocSnaps) {
             return Promise.all(
@@ -103,9 +146,16 @@ export default function HomeScreen(props) {
             )
         }
 
+        const gather = async () => {
+            fetchData()
+            .then(() => updateEntrance()); 
+        }
         //Get the latest update on an entrance via the site 
         //update = setInterval(fetchData, 30000)
-        fetchData();
+        // fetchData();
+
+        // updateEntrance();
+        gather();
 
         let cancelPreviousPromiseChain = undefined;
         // Snapshot of houseIDs collection in users object 
@@ -208,26 +258,72 @@ export default function HomeScreen(props) {
 
     const renderEntity = ({item, index}) => {
         return (
-            <TouchableOpacity style={styles.entityContainer} onPress={() => {
-                navigation.navigate('Houses', {
-                    houseID: item.houseID,
-                    name: item.name,
-                    ownerID: item.ownerID,
-                    headerStyle: {
-                        backgroundColor: '#81B622',
-                    },
-                    headerTintColor: 'black',
-                    extraData: props.extraData
-                })
-                }}>
-                <View>
-                    <Text style={styles.entityTextName}>
-                        {item.name} 
-                    </Text>
-                    <Text style={styles.entityTextID}>HouseID:</Text>
-                    <Text style={styles.entityText} selectable={true}>{item.houseID}</Text>
-                </View>
-            </TouchableOpacity>
+            <View style={{flexDirection: 'row'}}>
+                <TouchableOpacity style={styles.entityContainer} onPress={() => {
+                    navigation.navigate('Houses', {
+                        houseID: item.houseID,
+                        name: item.name,
+                        ownerID: item.ownerID,
+                        headerStyle: {
+                            backgroundColor: '#81B622',
+                        },
+                        headerTintColor: 'black',
+                        extraData: props.extraData
+                    })
+                    }}>
+                    <View>
+                        <Text style={styles.entityTextName}>
+                            {item.name} 
+                        </Text>
+                        <Text style={styles.entityTextID}>HouseID:</Text>
+                        <Text style={styles.entityText} selectable={true}>{item.houseID}</Text>
+                    </View>
+                </TouchableOpacity>
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={leaveModalVisible}
+                    onRequestClose={() => {
+                    Alert.alert("Modal has been closed.");
+                    setLeaveModalVisible(!leaveModalVisible);
+                    }}
+                >
+                    <View style={styles.centeredView}>
+                        <View style={styles.modalView}>
+                            <Text style={styles.modalText}>Are you sure you want to leave the house: {modName}?</Text>
+                            <View style={{flexDirection: 'row'}}>
+                                <TouchableOpacity
+                                style={[styles.button, styles.buttonClose]}
+                                onPress={() => setLeaveModalVisible(!leaveModalVisible)}
+                                >
+                                    <Text style={styles.buttonText}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                style={[styles.leaveModalButton, styles.buttonClose]}
+                                onPress={async () => {
+                                    console.log("LEAVE BUTTON PRESSED ON", item.name)
+                                    console.log("| ID:", modID)
+                                    const filteredData = entities.filter((toDelete) => toDelete.id !== modID);
+                                    setEntities(filteredData);
+                                    await deleteDoc(doc(db, 'users', `${userID}`, 'houseIDs', modID));
+                                    setLeaveModalVisible(!leaveModalVisible)
+                                }}
+                                >
+                                    <Text style={styles.buttonText}>Leave</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+                <TouchableOpacity style={styles.leaveButton} onPress={ () => {
+                    setModID(item.id);
+                    setModName(item.name);
+                    setLeaveModalVisible(true);
+                }
+                }>
+                    <Text style={styles.buttonText}>Leave</Text>
+                </TouchableOpacity>
+            </View>
         );
     }
 

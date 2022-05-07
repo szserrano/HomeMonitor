@@ -7,8 +7,8 @@ export default StyleSheet.create({
     },
     formContainer: {
         flexDirection: 'row',
-        height: 80,
-        flex: 0.15,
+        height: 60,
+        // flex: 0.15,
         paddingLeft: 30,
         paddingRight: 30,
         justifyContent: 'center',
@@ -32,6 +32,19 @@ export default StyleSheet.create({
         justifyContent: 'center'
     },
     leaveButton: {
+        margin: 10,
+        width: 75,
+        backgroundColor: '#E10032',
+        borderRadius: 15,
+        borderBottomColor: '#cccccc',
+        borderBottomWidth: 1,
+        paddingTop: 5,
+        paddingLeft: 5,
+        paddingBottom: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    leaveModalButton: {
         marginLeft: 35,
         height: 47,
         borderRadius: 5,
@@ -54,8 +67,8 @@ export default StyleSheet.create({
         width: 350
     },
     entityContainer: {
-        margin: 10,
-        //width: 250,
+        margin: 5,
+        width: 250,
         backgroundColor: '#D4F1F4',
         borderRadius: 15,
         borderBottomColor: '#cccccc',
