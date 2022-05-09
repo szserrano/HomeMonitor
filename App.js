@@ -28,7 +28,7 @@ export default function App() {
       <></>	
     )	
   }
-  console.log("not loading")
+  // console.log("not loading")
 
   // Persist login puts logged in user data into 'user' variable above using setUser
   useEffect(() => {

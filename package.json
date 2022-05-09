@@ -21,6 +21,7 @@
     "expo": "^44.0.6",
     "expo-device": "~4.1.0",
     "expo-notifications": "~0.14.0",
+    "expo-sms": "~10.1.0",
     "expo-status-bar": "~1.2.0",
     "firebase": "^9.6.9",
     "papaparse": "^5.3.2",
