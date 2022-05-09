@@ -25,7 +25,7 @@ export default function HousesScreen({route}) {
     // Used in Adding/Leaving a house in onAddButtonPress function
     const [entityTextAdd, setEntityTextAdd] = useState('');
     const [entityTextRename, setEntityTextRename] = useState('');
-    const [entityTextCreate, setEntityTextCreate] = useState('');
+    const [renamed, setRenamed] = useState(false);
 
     // Used to display entrances and users within the current house
     const [entrances, setEntrances] = useState([]);
@@ -220,7 +220,7 @@ export default function HousesScreen({route}) {
         return () => {
             unsubscribe(); // detaches the listener
         }
-    }, [entityTextRename]);
+    }, [renameModalVisible]);
 
     // Grab user data for list of users
     useEffect(() => {
@@ -339,11 +339,17 @@ export default function HousesScreen({route}) {
                                     <TouchableOpacity
                                     style={[styles.button, styles.buttonClose]}
                                     onPress={() => {
-                                        if(entityTextRename.length) updateDoc(doc(db, 'entrances', mod), {name:entityTextRename});
-                                        else Alert.alert("Cannot assign an empty name to an entrance","",[{text: "Okay!"}]);
+                                        if(entityTextRename.length) {
+                                            setRenamed(true);
+                                            updateDoc(doc(db, 'entrances', modID), {name:entityTextRename});
+                                        } 
+                                        else {
+                                            Alert.alert("Cannot assign an empty name to an entrance","",[{text: "Okay!"}]);
+                                            setRenamed(false);
+                                        }
                                         setRenameModalVisible(!renameModalVisible)
                                         setEntityTextRename('');
-                                    }}
+                                        }}
                                     >
                                         <Text style={styles.buttonText}>Rename</Text>
                                     </TouchableOpacity>
@@ -470,7 +476,7 @@ export default function HousesScreen({route}) {
                     </View>
                     <FlatList
                         style={styles.flatList}
-                        maxHeight={225}
+                        maxHeight={140}
                         minHeight={70}
                         nestedScrollEnabled={true}
                         data={users}
